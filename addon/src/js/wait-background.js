@@ -4,6 +4,7 @@ import Messages from './messages.js';
 import backgroundSelf from './background.js';
 
 function reloadPageOnAddonReady() {
+    console.warn('wait for init');
     Messages.connectToBackground(`${location.pathname} wait`, 'i-am-back', () => location.reload());
 }
 

@@ -57,6 +57,8 @@ if (Constants.IS_BACKGROUND_PAGE) {
     }
 }
 
+console.debug('_cacheStorage', _cacheStorage)
+
 export {createDeepCloneObjProxy as createStorage};
 
 export default _cacheStorage;

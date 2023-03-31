@@ -1,5 +1,5 @@
 {
-    "manifest_version": 2,
+    "manifest_version": 3,
 
     "browser_specific_settings": {
         "gecko": {
@@ -32,16 +32,19 @@
         "management",
         "webRequest",
         "webRequestBlocking",
-        "<all_urls>",
         "storage",
         "unlimitedStorage"
+    ],
+
+    "host_permissions": [
+        "<all_urls>"
     ],
 
     "optional_permissions": [
         "bookmarks"
     ],
 
-    "browser_action": {
+    "action": {
         "default_icon": "icons/icon.svg",
         "default_title": "__MSG_extensionName__",
         "default_popup": "popup/popup.html",
@@ -76,12 +79,14 @@
         "page": "stg-background.html"
     },
 
-    "content_security_policy": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; script-src 'self'",
+    "content_security_policy": {
+        "extension_pages": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; script-src 'self'"
+    },
 
     "default_locale": "en",
 
     "commands": {
-        "_execute_browser_action": {
+        "_execute_action": {
             "suggested_key": {
                 "default": "F8"
             },

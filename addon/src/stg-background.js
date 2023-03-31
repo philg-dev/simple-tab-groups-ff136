@@ -1675,9 +1675,9 @@ async function setBrowserAction(windowId, title, icon, enable, isSticky) {
 
     if (undefined !== enable) {
         if (enable) {
-            browser.browserAction.enable();
+            browser.action.enable();
         } else {
-            browser.browserAction.disable();
+            browser.action.disable();
         }
     }
 
@@ -1686,15 +1686,15 @@ async function setBrowserAction(windowId, title, icon, enable, isSticky) {
         : Constants.MANIFEST.browser_action;
 
     await Promise.all([
-        browser.browserAction.setTitle({
+        browser.action.setTitle({
             ...winObj,
             title: title || manifestAction.default_title,
         }).catch(log.onCatch('setTitle')),
-        browser.browserAction.setBadgeText({
+        browser.action.setBadgeText({
             ...winObj,
             text: isSticky ? Constants.STICKY_SYMBOL : '',
         }).catch(log.onCatch('setBadgeText')),
-        browser.browserAction.setIcon({
+        browser.action.setIcon({
             ...winObj,
             path: icon || manifestAction.default_icon,
         }).catch(log.onCatch('setIcon')),
@@ -3757,7 +3757,7 @@ async function restoreOldExtensionUrls(parseUrlFunc) {
 browser.runtime.onInstalled.addListener(function onInstalled({previousVersion, reason, temporary}) {
     const log = logger.start('onInstalled', {previousVersion, reason, temporary});
 
-    browser.runtime.onInstalled.removeListener(onInstalled);
+    // browser.runtime.onInstalled.removeListener(onInstalled);
 
     // if (!self.inited) {
     //     setTimeout(onInstalled, 150, {previousVersion, reason, temporary});
@@ -3766,16 +3766,21 @@ browser.runtime.onInstalled.addListener(function onInstalled({previousVersion, r
 
     if (temporary) {
         self.IS_TEMPORARY = true;
-        return log.stop('addon is temp');
-    }
-
-    if (browser.runtime.OnInstalledReason.INSTALL === reason ||
-        (browser.runtime.OnInstalledReason.UPDATE === reason && -1 === Utils.compareVersions(previousVersion, '5.0'))) {
+        log.log('addon is temp');
+    } else if (
+            browser.runtime.OnInstalledReason.INSTALL === reason ||
+            (
+                browser.runtime.OnInstalledReason.UPDATE === reason &&
+                -1 === Utils.compareVersions(previousVersion, '5.0')
+            )
+        ) {
         log.log('open welcome');
         Urls.openUrl('welcome');
     }
 
     log.stop();
+
+    init();
 });
 
 async function initializeGroupWindows(windows, currentGroupIds) {
@@ -3888,6 +3893,8 @@ async function initializeGroupWindows(windows, currentGroupIds) {
 
 async function init() {
     const log = logger.start(['info', '[init]']);
+
+    await setBrowserAction(undefined, 'loading', undefined, false);
 
     try {
         let data = await Storage.get(),
@@ -4003,7 +4010,7 @@ async function init() {
 
         await setBrowserAction(undefined, undefined, undefined, true);
 
-        await browser.browserAction.setBadgeBackgroundColor({
+        await browser.action.setBadgeBackgroundColor({
             color: 'transparent',
         });
 
@@ -4037,18 +4044,25 @@ async function init() {
 function setActionToReloadAddon() {
     setBrowserAction(undefined, 'lang:clickHereToReloadAddon', '/icons/exclamation-triangle-yellow.svg', true).catch(() => {});
 
-    browser.browserAction.setPopup({
+    browser.action.setPopup({
         popup: '',
     });
 
-    browser.browserAction.onClicked.addListener(() => browser.runtime.reload());
+    browser.action.onClicked.addListener(() => browser.runtime.reload());
 }
 
-setBrowserAction(undefined, 'loading', undefined, false);
+
 
 // delay startup to avoid errors with extensions "Facebook Container", "Firefox Multi-Account Containers" etc.
 // TransactionInactiveError: A request was placed against a transaction which is currently not active, or which is finished.
 // An unexpected error occurred
 // etc.
 
-setTimeout(init, 200);
+browser.runtime.onStartup.addListener(async function onStartup() {
+    const log = logger.start('onStartup');
+
+    await init();
+
+    log.stop();
+});
+// setTimeout(init, 200);
