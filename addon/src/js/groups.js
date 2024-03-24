@@ -5,7 +5,7 @@ import * as Storage from './storage.js';
 import * as Cache from './cache.js';
 import * as Containers from './containers.js';
 // import Messages from './messages.js';
-import JSON from './json.js';
+// import JSON from './json.js';
 import * as Tabs from './tabs.js';
 import * as Utils from './utils.js';
 
@@ -45,7 +45,7 @@ export async function load(groupId = null, withTabs = false, includeFavIconUrl, 
 
     log.stop();
 
-    let groupIndex = groups.findIndex(group => group.id === groupId);
+    const groupIndex = groups.findIndex(group => group.id === groupId);
 
     return {
         group: groups[groupIndex],
@@ -80,30 +80,75 @@ export async function save(groups, withMessage = false) {
     return groups;
 }
 
-export function create(id, title) {
-    return {
-        id: id,
-        title: createTitle(title, id),
-        iconColor: backgroundSelf.options.defaultGroupIconColor || Utils.randomColor(),
+export function create(id, title, defaultGroupProps = {}) {
+    const group = {
+        id,
+        title: null,
+        iconColor: null,
         iconUrl: null,
-        iconViewType: backgroundSelf.options.defaultGroupIconViewType,
+        iconViewType: Constants.DEFAULT_GROUP_ICON_VIEW_TYPE,
         tabs: [],
         isArchive: false,
+        discardTabsAfterHide: false,
+        discardExcludeAudioTabs: false,
+        prependTitleToWindow: false,
+        exportToBookmarksWhenAutoBackup: true,
+        leaveBookmarksOfClosedTabs: false,
         newTabContainer: Constants.DEFAULT_COOKIE_STORE_ID,
         ifDifferentContainerReOpen: false,
         excludeContainersForReOpen: [],
-        isMain: false,
         isSticky: false,
         catchTabContainers: [],
         catchTabRules: '',
-        moveToMainIfNotInCatchTabRules: false,
+        moveToGroupIfNoneCatchTabRules: null,
         muteTabsWhenGroupCloseAndRestoreWhenOpen: false,
         showTabAfterMovingItIntoThisGroup: false,
         showOnlyActiveTabAfterMovingItIntoThisGroup: false,
         showNotificationAfterMovingTabIntoThisGroup: true,
-        dontDiscardTabsAfterHideThisGroup: false,
         bookmarkId: null,
+
+        ...defaultGroupProps,
     };
+
+    if (id) { // create title for group
+        group.title = createTitle(title, id, defaultGroupProps);
+    } else { // create title for default group, if needed
+        group.title ??= createTitle(title, id, defaultGroupProps);
+    }
+
+    group.iconColor ??= Utils.randomColor();
+
+    return group;
+}
+
+export async function getDefaults() {
+    const {defaultGroupProps} = await Storage.get('defaultGroupProps');
+
+    const defaultGroup = create(undefined, undefined, defaultGroupProps);
+    const defaultCleanGroup = create(undefined, undefined, {});
+
+    delete defaultGroup.id;
+    delete defaultGroup.tabs;
+
+    delete defaultCleanGroup.id;
+    delete defaultCleanGroup.tabs;
+
+    defaultGroup.iconColor = defaultGroupProps.iconColor || '';
+    defaultCleanGroup.iconColor = '';
+
+    return {
+        defaultGroup,
+        defaultCleanGroup,
+        defaultGroupProps,
+    };
+}
+
+export async function saveDefault(defaultGroupProps) {
+    const log = logger.start('saveDefault', defaultGroupProps);
+
+    await Storage.set({defaultGroupProps});
+
+    log.stop();
 }
 
 export async function add(windowId, tabIds = [], title = null) {
@@ -112,10 +157,10 @@ export async function add(windowId, tabIds = [], title = null) {
 
     const log = logger.start('add', {windowId, tabIds, title});
 
-    let windowGroupId = Cache.getWindowGroup(windowId);
+    const windowGroupId = Cache.getWindowGroup(windowId);
 
     if (windowGroupId) {
-        let result = await unload(windowGroupId);
+        const result = await unload(windowGroupId);
 
         if (!result) {
             log.stopError('cant unload');
@@ -123,12 +168,18 @@ export async function add(windowId, tabIds = [], title = null) {
         }
     }
 
-    let {lastCreatedGroupPosition} = await Storage.get('lastCreatedGroupPosition');
+    let [
+        {lastCreatedGroupPosition},
+        {defaultGroupProps},
+    ] = await Promise.all([
+        Storage.get('lastCreatedGroupPosition'),
+        getDefaults(),
+    ]);
 
     lastCreatedGroupPosition++;
 
-    let {groups} = await load(),
-        newGroup = create(lastCreatedGroupPosition, title);
+    const {groups} = await load(),
+        newGroup = create(lastCreatedGroupPosition, title, defaultGroupProps);
 
     groups.push(newGroup);
 
@@ -168,10 +219,12 @@ export async function add(windowId, tabIds = [], title = null) {
 export async function remove(groupId) {
     const log = logger.start('remove', groupId);
 
-    let groupWindowId = Cache.getWindowId(groupId);
+    const groupWindowId = Cache.getWindowId(groupId);
 
-    if (Cache.getWindowId(groupId)) {
-        let result = await unload(groupId);
+    log.log('groupWindowId', groupWindowId);
+
+    if (groupWindowId) {
+        const result = await unload(groupId);
 
         if (!result) {
             log.stopError('cant unload');
@@ -179,25 +232,45 @@ export async function remove(groupId) {
         }
     }
 
-    let {group, groups, groupIndex} = await load(groupId, true);
+    const [
+        {group, groups, groupIndex},
+        {defaultGroupProps},
+    ] = await Promise.all([
+        load(groupId, true),
+        getDefaults(),
+    ]);
+
+    if (!group) {
+        log.stopError('groupId', groupId, 'not found');
+        return;
+    }
 
     backgroundSelf.addUndoRemoveGroupItem(group);
 
     groups.splice(groupIndex, 1);
 
+    groups.forEach(gr => {
+        if (gr.moveToGroupIfNoneCatchTabRules === group.id) {
+            gr.moveToGroupIfNoneCatchTabRules = null;
+            log.log('remove moveToGroupIfNoneCatchTabRules from group', gr.id);
+        }
+    });
+
     await save(groups);
+
+    if (defaultGroupProps.moveToGroupIfNoneCatchTabRules === group.id) {
+        log.log('remove moveToGroupIfNoneCatchTabRules from default group props');
+        delete defaultGroupProps.moveToGroupIfNoneCatchTabRules;
+        await saveDefault(defaultGroupProps);
+    }
 
     if (!group.isArchive) {
         await Tabs.remove(group.tabs);
 
         backgroundSelf.updateMoveTabMenus();
-
-        if (group.isMain) {
-            Utils.notify(['thisGroupWasMain'], 7);
-        }
     }
 
-    backgroundSelf.removeGroupBookmark(group);
+    backgroundSelf.removeGroupBookmark(group).catch(log.onCatch('cant remove group bookmark', false));
 
     backgroundSelf.sendMessage('group-removed', {
         groupId: groupId,
@@ -215,29 +288,27 @@ export async function remove(groupId) {
 export async function update(groupId, updateData) {
     const log = logger.start('update', {groupId, updateData});
 
-    let {group, groups} = await load(groupId);
+    if (updateData.iconUrl?.startsWith('chrome:')) {
+        Utils.notify('Icon not supported');
+        delete updateData.iconUrl;
+    }
+
+    const updateDataKeys = Object.keys(updateData);
+
+    if (!updateDataKeys.length) {
+        return log.stop(null, 'no updateData keys to update');
+    }
+
+    const {group, groups} = await load(groupId);
 
     if (!group) {
         log.throwError(['group', groupId, 'not found for update it']);
     }
 
-    updateData = JSON.clone(updateData); // clone need for fix bug: dead object after close tab which create object
-
-    if (updateData.iconUrl && updateData.iconUrl.startsWith('chrome:')) {
-        Utils.notify('Icon not supported');
-        delete updateData.iconUrl;
-    }
+    // updateData = JSON.clone(updateData); // clone need for fix bug: dead object after close tab which create object
 
     if (updateData.title) {
         updateData.title = updateData.title.slice(0, 256);
-    }
-
-    if (!Object.keys(updateData).length) {
-        return log.stop(null, 'no updateData keys to update');
-    }
-
-    if (updateData.isMain) {
-        groups.forEach(gr => gr.isMain = gr.id === groupId);
     }
 
     Object.assign(group, updateData);
@@ -251,15 +322,13 @@ export async function update(groupId, updateData) {
         },
     });
 
-    let externalGroup = mapForExternalExtension(group);
-
-    if (Object.keys(externalGroup).some(key => updateData.hasOwnProperty(key))) {
+    if (updateDataKeys.some(key => ExternalExtensionGroupDependentKeys.has(key))) {
         backgroundSelf.sendExternalMessage('group-updated', {
-            group: externalGroup,
+            group: mapForExternalExtension(group),
         });
     }
 
-    if (['title', 'iconUrl', 'iconColor', 'iconViewType', 'isArchive', 'isSticky'].some(key => updateData.hasOwnProperty(key))) {
+    if (KEYS_RESPONSIBLE_VIEW.some(key => updateData.hasOwnProperty(key))) {
         backgroundSelf.updateMoveTabMenus();
 
         await backgroundSelf.updateBrowserActionData(groupId);
@@ -271,6 +340,16 @@ export async function update(groupId, updateData) {
 
     log.stop();
 }
+
+const KEYS_RESPONSIBLE_VIEW = Object.freeze([
+    'title',
+    'iconUrl',
+    'iconColor',
+    'iconViewType',
+    'isArchive',
+    'isSticky',
+    'prependTitleToWindow',
+]);
 
 export async function move(groupId, newGroupIndex) {
     const log = logger.start('move', {groupId, newGroupIndex});
@@ -316,14 +395,14 @@ export async function unload(groupId) {
         return log.stopError(false, 'groupNotFound');
     }
 
-    let windowId = Cache.getWindowId(groupId);
+    const windowId = Cache.getWindowId(groupId);
 
     if (!windowId) {
         Utils.notify(['groupNotLoaded'], 7, 'groupNotLoaded');
         return log.stopError(false, 'groupNotLoaded');
     }
 
-    let {group} = await load(groupId, true);
+    const {group} = await load(groupId, true);
 
     if (!group) {
         Utils.notify(['groupNotFound'], 7, 'groupNotFound');
@@ -339,6 +418,8 @@ export async function unload(groupId) {
         Utils.notify(['notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera']);
         return log.stopError(false, 'some Tab Can Not Be Hidden');
     }
+
+    log.log('windowId', windowId);
 
     await backgroundSelf.loadingBrowserAction(true, windowId);
 
@@ -357,12 +438,19 @@ export async function unload(groupId) {
 
     await Tabs.safeHide(group.tabs);
 
-    if (backgroundSelf.options.discardTabsAfterHide && !group.dontDiscardTabsAfterHideThisGroup) {
+    if (group.discardTabsAfterHide) {
         log.log('run discard tabs');
-        Tabs.discard(group.tabs).catch(log.onCatch(['Tabs.discard', group.tabs]));
+
+        let tabs = group.tabs;
+
+        if (group.discardExcludeAudioTabs) {
+            tabs = group.tabs.filter(tab => !tab.audible);
+        }
+
+        Tabs.discard(tabs).catch(log.onCatch(['Tabs.discard from unload group', tabs]));
     }
 
-    await backgroundSelf.updateBrowserActionData(null, windowId).catch(log.onCatch(['updateBrowserActionData', windowId]));
+    await backgroundSelf.updateBrowserActionData(null, windowId);
 
     backgroundSelf.updateMoveTabMenus();
 
@@ -385,9 +473,9 @@ export async function archiveToggle(groupId) {
     await backgroundSelf.loadingBrowserAction();
 
     let {group, groups} = await load(groupId, true),
-        tabIdsToRemove = [];
+        tabsToRemove = [];
 
-    log.log('group.isArchive', group.isArchive);
+    log.log('group.isArchive', group.isArchive, '=>', !group.isArchive);
 
     if (group.isArchive) {
         group.isArchive = false;
@@ -397,7 +485,7 @@ export async function archiveToggle(groupId) {
         group.tabs = [];
     } else {
         if (Cache.getWindowId(groupId)) {
-            let result = await unload(groupId);
+            const result = await unload(groupId);
 
             if (!result) {
                 log.stopError('cant unload group');
@@ -407,23 +495,18 @@ export async function archiveToggle(groupId) {
             ({group, groups} = await load(groupId, true));
         }
 
-        tabIdsToRemove = group.tabs.map(Tabs.extractId);
+        tabsToRemove = group.tabs;
 
         group.isArchive = true;
         group.tabs = Tabs.prepareForSave(group.tabs, false, true, true);
-
-        if (group.isMain) {
-            group.isMain = false;
-            Utils.notify(['thisGroupWasMain'], 7);
-        }
     }
 
     await save(groups);
 
-    if (tabIdsToRemove.length) {
-        backgroundSelf.addExcludeTabIds(tabIdsToRemove);
-        await Tabs.remove(tabIdsToRemove);
-        backgroundSelf.removeExcludeTabIds(tabIdsToRemove);
+    if (tabsToRemove.length) {
+        backgroundSelf.addExcludeTabIds(tabsToRemove);
+        await Tabs.remove(tabsToRemove);
+        backgroundSelf.removeExcludeTabIds(tabsToRemove);
     }
 
     backgroundSelf.sendMessage('groups-updated');
@@ -438,6 +521,16 @@ export async function archiveToggle(groupId) {
 
     log.stop();
 }
+
+const ExternalExtensionGroupDependentKeys = new Set([
+    'title',
+    'isArchive',
+    'isSticky',
+    'iconColor',
+    'iconUrl',
+    'iconViewType',
+    'newTabContainer',
+]);
 
 export function mapForExternalExtension(group) {
     return {
@@ -462,8 +555,15 @@ export function setNewTabsParams(tabs, group) {
 }
 
 export async function getNextTitle() {
-    let {lastCreatedGroupPosition} = await Storage.get('lastCreatedGroupPosition');
-    return createTitle(null, lastCreatedGroupPosition + 1);
+    const [
+        {lastCreatedGroupPosition},
+        {defaultGroupProps},
+    ] = await Promise.all([
+        Storage.get('lastCreatedGroupPosition'),
+        getDefaults(),
+    ]);
+
+    return createTitle(null, lastCreatedGroupPosition + 1, defaultGroupProps);
 }
 
 function isCatchedUrl(url, catchTabRules) {
@@ -471,19 +571,20 @@ function isCatchedUrl(url, catchTabRules) {
         .split(/\s*\n\s*/)
         .map(regExpStr => regExpStr.trim())
         .filter(Boolean)
-        .some(function(regExpStr) {
+        .some(regExpStr => {
             try {
                 return new RegExp(regExpStr).test(url);
-            } catch (e) {};
+            } catch (e) {}
         });
 }
 
 export function normalizeContainersInGroups(groups) {
-    let allContainers = Containers.getAll(true),
-        hasChanges = false;
+    const allContainers = Containers.getAll(true);
 
-    groups.forEach(function(group) {
-        let oldNewTabContainer = group.newTabContainer,
+    let hasChanges = false;
+
+    groups.forEach(group => {
+        const oldNewTabContainer = group.newTabContainer,
             oldCatchTabContainersLength = group.catchTabContainers.length,
             oldExcludeContainersForReOpenLength = group.excludeContainersForReOpen.length;
 
@@ -498,52 +599,48 @@ export function normalizeContainersInGroups(groups) {
         ) {
             hasChanges = true;
 
-            backgroundSelf.sendMessage('group-updated', {
-                group: {
-                    id: group.id,
-                    newTabContainer: group.newTabContainer,
-                    catchTabContainers: group.catchTabContainers,
-                    excludeContainersForReOpen: group.excludeContainersForReOpen,
-                },
-            });
+            if (backgroundSelf.inited) {
+                backgroundSelf.sendMessage('group-updated', {
+                    group: {
+                        id: group.id,
+                        newTabContainer: group.newTabContainer,
+                        catchTabContainers: group.catchTabContainers,
+                        excludeContainersForReOpen: group.excludeContainersForReOpen,
+                    },
+                });
+            }
         }
     });
 
     return hasChanges;
 }
 
-export function getCatchedForTab(groups, currentGroup, {cookieStoreId, url}) {
-    groups = groups.filter(group => !group.isArchive);
+export function getCatchedForTab(notArchivedGroups, currentGroup, {cookieStoreId, url}) {
+    if (currentGroup.isSticky) {
+        return;
+    }
 
-    let destGroup = groups.find(function({catchTabContainers, catchTabRules}) {
+    const destGroup = notArchivedGroups.find(({catchTabContainers, catchTabRules}) => {
         if (catchTabContainers.includes(cookieStoreId)) {
             return true;
         }
 
-        if (catchTabRules && isCatchedUrl(url, catchTabRules)) {
+        if (isCatchedUrl(url, catchTabRules)) {
             return true;
         }
     });
 
     if (destGroup) {
         if (destGroup.id === currentGroup.id) {
-            return false;
+            return;
         }
 
         return destGroup;
     }
 
-    if (!currentGroup.moveToMainIfNotInCatchTabRules || !currentGroup.catchTabRules) {
-        return false;
+    if (currentGroup.catchTabRules && currentGroup.moveToGroupIfNoneCatchTabRules) {
+        return notArchivedGroups.find(group => group.id === currentGroup.moveToGroupIfNoneCatchTabRules);
     }
-
-    let mainGroup = groups.find(group => group.isMain);
-
-    if (!mainGroup || mainGroup.id === currentGroup.id) {
-        return false;
-    }
-
-    return mainGroup;
 }
 
 export function isNeedBlockBeforeRequest(groups) {
@@ -578,7 +675,22 @@ export async function setIconUrl(groupId, iconUrl) {
 const emojiRegExp = /\p{RI}\p{RI}|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?(\u{200D}\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?)+|\p{EPres}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})/u;
 const firstCharEmojiRegExp = new RegExp(`^(${emojiRegExp.source})`, emojiRegExp.flags);
 
-export function getIconUrl(group = {iconViewType: Constants.DEFAULT_OPTIONS.defaultGroupIconViewType}, keyInObj = null) {
+export function getEmojiIcon(group) {
+    if (group.iconViewType === 'title') {
+        const [emoji] = firstCharEmojiRegExp.exec(group.title) || [];
+        return emoji;
+    }
+}
+
+const UNKNOWN_GROUP_ICON_PROPS = {
+    title: '❓',
+    iconViewType: 'title',
+    iconColor: 'gray',
+};
+
+export function getIconUrl(group, keyInObj = null) {
+    group ??= UNKNOWN_GROUP_ICON_PROPS;
+
     let result = null;
 
     if (group.iconUrl) {
@@ -588,19 +700,11 @@ export function getIconUrl(group = {iconViewType: Constants.DEFAULT_OPTIONS.defa
             group.iconColor = 'transparent';
         }
 
-        let stroke = 'transparent' === group.iconColor ? 'stroke="#606060" stroke-width="1"' : '',
-            title = null,
-            emoji = null;
+        const stroke = 'transparent' === group.iconColor ? 'stroke="#606060" stroke-width="1"' : '',
+            emoji = getEmojiIcon(group),
+            title = emoji || group.title;
 
-        if (group.iconViewType === 'title') {
-            title = group?.title || browser.i18n.getMessage('title');
-
-            [emoji] = firstCharEmojiRegExp.exec(title) || [];
-
-            title = emoji || title;
-        }
-
-        let icons = {
+        const icons = {
             'main-squares': `
             <svg width="128" height="128" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
                 <g fill="context-fill" fill-opacity="context-fill-opacity">
@@ -652,11 +756,7 @@ export function getIconUrl(group = {iconViewType: Constants.DEFAULT_OPTIONS.defa
         try {
             result = Utils.convertSvgToUrl(icons[group.iconViewType].trim());
         } catch (e) {
-            result = getIconUrl({
-                title: '❓',
-                iconViewType: 'title',
-                iconColor: 'gray',
-            });
+            result = getIconUrl(UNKNOWN_GROUP_ICON_PROPS);
         }
     }
 
@@ -669,8 +769,16 @@ export function getIconUrl(group = {iconViewType: Constants.DEFAULT_OPTIONS.defa
     return result;
 }
 
-export function createTitle(title, groupId) {
-    return String(title || browser.i18n.getMessage('newGroupTitle', groupId));
+export function createTitle(title = null, groupId = null, defaultGroupProps = {}) {
+    if (title) {
+        return String(title);
+    }
+
+    if (defaultGroupProps.title && groupId) {
+        return Utils.format(defaultGroupProps.title, {index: groupId}, Utils.DATE_LOCALE_VARIABLES);
+    }
+
+    return browser.i18n.getMessage('newGroupTitle', groupId || '{index}');
 }
 
 export function getTitle({id, title, isArchive, isSticky, tabs, iconViewType, newTabContainer}, args = '') {
@@ -706,25 +814,25 @@ export function getTitle({id, title, isArchive, isSticky, tabs, iconViewType, ne
         title = beforeTitle.join(' ') + ' ' + title;
     }
 
-    tabs = tabs.slice();
-
     if (withCountTabs) {
-        title += ' (' + tabsCountMessage(tabs, isArchive) + ')';
+        title += ' (' + tabsCountMessage(tabs.slice(), isArchive) + ')';
     }
 
-    if (withTabs && tabs.length) {
-        title += ':\n' + tabs
-            .slice(0, 30)
-            .map(tab => Tabs.getTitle(tab, false, 70, !isArchive))
-            .join('\n');
+    if (withTabs) {
+        if (tabs.length) {
+            title += ':\n' + tabs
+                .slice(0, 30)
+                .map(tab => Tabs.getTitle(tab, false, 70, !isArchive))
+                .join('\n');
 
-        if (tabs.length > 30) {
-            title += '\n...';
+            if (tabs.length > 30) {
+                title += '\n...';
+            }
         }
     }
 
     if (window.localStorage.enableDebug) {
-        let windowId = Cache.getWindowId(id) || tabs[0]?.windowId || 'no window';
+        let windowId = Cache.getWindowId(id) || tabs?.[0]?.windowId || 'no window';
         title = `@${windowId}:#${id} ${title}`;
     }
 

@@ -54,10 +54,7 @@ export function setTab({id, url, title, favIconUrl, cookieStoreId, openerTabId, 
 
     tabs[id].url = url;
     tabs[id].title = title || url;
-
-    if (Utils.isAvailableFavIconUrl(favIconUrl)) {
-        tabs[id].favIconUrl = favIconUrl;
-    }
+    tabs[id].favIconUrl = Utils.isAvailableFavIconUrl(favIconUrl) ? favIconUrl : null;
 }
 
 export function hasTab(tabId) {
@@ -97,7 +94,7 @@ export function getTabGroup(tabId) {
 }
 
 export async function removeTabGroup(tabId) {
-    delete tabs[tabId].groupId;
+    delete tabs[tabId]?.groupId;
     return browser.sessions.removeTabValue(tabId, 'groupId').catch(() => {});
 }
 
@@ -129,7 +126,7 @@ export function getTabFavIcon(tabId) {
 }
 
 export async function removeTabFavIcon(tabId) {
-    delete tabs[tabId].favIconUrl;
+    delete tabs[tabId]?.favIconUrl;
     return browser.sessions.removeTabValue(tabId, 'favIconUrl').catch(() => {});
 }
 
@@ -161,7 +158,7 @@ export function getTabThumbnail(tabId) {
 }
 
 export async function removeTabThumbnail(tabId) {
-    delete tabs[tabId].thumbnail;
+    delete tabs[tabId]?.thumbnail;
     return browser.sessions.removeTabValue(tabId, 'thumbnail').catch(() => {});
 }
 
@@ -208,7 +205,7 @@ export function applyTabSession(tab) {
     return applySession(tab, tabs[tab.id] || {});
 }
 
-export function removeTabSession(tabId) {
+export async function removeTabSession(tabId) {
     return Promise.all([
         removeTabGroup(tabId),
         removeTabFavIcon(tabId),
@@ -234,7 +231,7 @@ export function getTabsSessionAndRemove(tabIds) {
 }
 
 // WINDOWS
-export function setWindowGroup(windowId, groupId) {
+export async function setWindowGroup(windowId, groupId) {
     windows[windowId] ??= {};
     windows[windowId].groupId = groupId;
 
@@ -257,7 +254,7 @@ export function removeWindow(windowId) {
     delete windows[windowId];
 }
 
-export function removeWindowGroup(windowId) {
+export async function removeWindowGroup(windowId) {
     delete windows[windowId].groupId;
     return browser.sessions.removeWindowValue(windowId, 'groupId').catch(() => {});
 }

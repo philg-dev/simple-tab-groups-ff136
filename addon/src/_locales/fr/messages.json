@@ -57,6 +57,10 @@
         "message": "Annuler",
         "description": "Cancel"
     },
+    "close": {
+        "message": "Fermer",
+        "description": "Close"
+    },
     "searchPlaceholder": {
         "message": "Chercher un onglet...",
         "description": "Search placeholder"
@@ -82,6 +86,10 @@
     "closePopupAfterChangeGroup": {
         "message": "Fermer la pop-up après avoir changé de groupe",
         "description": "Close popup after changing group"
+    },
+    "closePopupAfterSelectTab": {
+        "message": "Fermer la pop-up après avoir sélectionné un onglet",
+        "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
         "message": "Ouvrir \"Gérer les groupes\" dans un nouvel onglet",
@@ -270,8 +278,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Ici vous pouvez ajouter des raccourcis.<br>Restrictions :<br>1. Ces raccourcis ne fonctionneront que sur des pages web (http:, https:). Sur des pages du navigateur (about:) - cela ne fonctionne pas, l'API WebExtensions ne l'autorise pas.<br>2. Certains raccourcis ne fonctionneront pas sur différentes dispositions de clavier. Par exemple, le raccourci <code>Ctrl + ~</code> créé dans la disposition US  ne fonctionnera pas sur la disposition RU, car la disposition russe a un autre code pour cette touche. Pour contourner ce problème, créez simplement un autre raccourci avec la disposition russe : <code>Ctrl + Ё</code>",
-        "description": "Hotkeys description"
+        "message": "Vous pouvez aussi configurer les raccourcis sur la page <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Gérer les raccourcis d'extension</a>. Ceci s'appliquera à toutes les fenêtres et toutes les pages du navigateur.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "Ajouter un raccourci",
@@ -282,8 +290,8 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Appuyez sur des touches ici",
-        "description": "Press key here"
+        "message": "Saisissez un raccourci",
+        "description": "Type a shortcut"
     },
     "selectAction": {
         "message": "Sélectionner l'action",
@@ -406,10 +414,10 @@
         "description": "Icon style"
     },
     "discardTabsAfterHide": {
-        "message": "Décharger les onglets lorsqu'ils sont masqués (ceci libérera de la RAM)",
-        "description": "Discard tabs after hide (this will save the RAM)"
+        "message": "Décharger les onglets de la mémoire à la fermeture d'un groupe",
+        "description": "Unload tabs from memory after closing a group"
     },
-    "discardAfterHideExcludeAudioTabs": {
+    "discardExcludeAudioTabs": {
         "message": "Exclure les onglet avec du son",
         "description": "Exclude tabs with sound"
     },
@@ -449,10 +457,6 @@
         "message": "FireFox a planté et tous les groupes ont été perdus.\nSi vous avez une sauvegarde, vous pouvez effectuer une restauration à partir de celle-ci.",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
     },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "Style de l’icône pour les nouveaux groupes",
-        "description": "Icon style for a new group"
-    },
     "openGroupInNewWindow": {
         "message": "Ouvrir le groupe dans une nouvelle fenêtre",
         "description": "Open group in new window"
@@ -464,6 +468,14 @@
     "showTabAfterMovingItIntoThisGroup": {
         "message": "Afficher l'onglet après l'avoir déplacé automatiquement vers ce groupe",
         "description": "Show the tab after auto-moving it into this group"
+    },
+    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+        "message": "Seulement si l'onglet actif a été déplacé",
+        "description": "Only if the active tab has been moved"
+    },
+    "showNotificationAfterMovingTabIntoThisGroup": {
+        "message": "Afficher une notification quand des onglets sont déplacés vers ce groupe",
+        "description": "Show a notification when tabs are moved to this group"
     },
     "tabMoving": {
         "message": "Déplacement des onglets",
@@ -599,7 +611,7 @@
         "message": "Créer un nouveau groupe lorsque vous ouvrez une nouvelle fenêtre",
         "description": "Create a new group when opening a new window"
     },
-    "prependGroupTitleToWindowTitle": {
+    "prependTitleToWindow": {
         "message": "Ajouter le nom du groupe au nom de la fenêtre",
         "description": "Prepend group title to window title"
     },
@@ -645,10 +657,6 @@
         "message": "Vous n'avez pas accès aux marque-pages. Activez-le dans les préférences de l'extension",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
-    "exportGroupToMainBookmarkFolder": {
-        "message": "Exporter les groupes dans le dossier \"STG bookmarks\"",
-        "description": "Export groups to \"STG bookmarks\" bookmark folder"
-    },
     "exportGroupToBookmarks": {
         "message": "Exporter le groupe vers les marque-pages",
         "description": "Export group to bookmarks"
@@ -671,10 +679,6 @@
         "message": "Ce groupe n'a pas d'onglet",
         "description": "This group has no tabs"
     },
-    "autoBackupGroupsToBookmarks": {
-        "message": "Sauvegarder automatiquement tous les groupes vers les marque-pages",
-        "description": "Auto backup all groups to bookmarks"
-    },
     "exportAllGroupsToBookmarks": {
         "message": "Exporter tous les groupes vers les marque-pages",
         "description": "Export all groups to bookmarks"
@@ -686,10 +690,6 @@
     "discardTabTitle": {
         "message": "Décharger l'onglet de la mémoire",
         "description": "Discard tab"
-    },
-    "autoBackupGroupsToFile": {
-        "message": "Sauvegarder automatiquement tous les groupes vers un fichier (dans le dossier des téléchargements)",
-        "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
         "message": "Nom du dossier",
@@ -706,10 +706,6 @@
     "showOtherTabs": {
         "message": "Montrer d'autres onglets",
         "description": "Show other tabs"
-    },
-    "dontDiscardTabsAfterHideThisGroup": {
-        "message": "Ne pas décharger les onglets de ce groupe lorsqu'ils sont masqués",
-        "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
         "message": "Afficher une notification après la suppression d'un groupe",
@@ -818,16 +814,24 @@
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "Veuillez activer le paramètre \"Restaurer la session précédente\" dans les options du navigateur.<br>C'est nécessaire pour maintenir la communication entre les groupes et les onglets.,<br>sinon les onglets ne s'ouvriront pas au redémarrage du navigateur et seront perdus pour l'extension -<br>l'extension cessera de fonctionner.",
+        "message": "Veuillez activer \"Ouvrir les fenêtres et onglets précédents\" dans les paramètres du navigateur.<br>C'est nécessaire pour maintenir la communication entre les groupes et les onglets, <br>sinon les onglets ne s'ouvriront au redémarrage du navigateur et ils seront perdus pour l'extension-<br>l'extension cessera de fonctionner.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
+    "exportToBookmarksWhenAutoBackup": {
+        "message": "Sauver le groupe dans les marque-pages pendant la sauvegarde automatique",
+        "description": "Save the group to bookmarks when auto backup"
+    },
     "leaveBookmarksOfClosedTabs": {
-        "message": "Conserver les marque-pages des onglets fermés (mais ils seront séparés des autres marque-pages)",
-        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+        "message": "Conserver les marque-pages des onglets fermés",
+        "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "Activer le mode DEBUG",
         "description": "Enable DEBUG"
+    },
+    "disableDebugTitle": {
+        "message": "Désactiver le mode DEBUG",
+        "description": "Disable DEBUG"
     },
     "loggingIsEnabledTitle": {
         "message": "la journalisation est activée",
@@ -987,28 +991,6 @@
         "message": "Recherche ou Flèche droite pour mettre le focus sur l'onglet/groupe actif",
         "description": "Search or right arrow to focus on active tab/group"
     },
-    "thisGroupIsMain": {
-        "message": "Ce groupe est défini comme groupe principal",
-        "description": "This group is marked as main"
-    },
-    "setGroupAsMain": {
-        "message": "Définir ce groupe comme groupe principal",
-        "description": "Set this group as main"
-    },
-    "thisGroupWasMain": {
-        "message": "Information\nCe groupe était défini comme groupe principal",
-        "description": "Notice\nThis group was marked as the main"
-    },
-    "moveToMainIfNotInCatchTabRules": {
-        "message": "Déplacer les onglets de ce groupe vers le groupe \"$grouptitle$\" si aucune des expressions régulières n'est valide.",
-        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
-        "placeholders": {
-            "grouptitle": {
-                "content": "$1",
-                "example": "My main group"
-            }
-        }
-    },
     "noContainerTitle": {
         "message": "Aucun contexte",
         "description": "No container"
@@ -1048,10 +1030,6 @@
                 "example": "Facebook Container"
             }
         }
-    },
-    "hotkeysDescription2": {
-        "message": "Vous pouvez aussi configurer les raccourcis sur la page <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Gérer les raccourcis d'extension</a>. Ceci s'appliquera à toutes les fenêtres et toutes les pages du navigateur.",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "Rendre l'onglet silencieux",
@@ -1180,5 +1158,47 @@
     "group": {
         "message": "Groupe",
         "description": "Group"
+    },
+    "helpPageUnsupportedUrlTitle": {
+        "message": "URL non supportée",
+        "description": "Unsupported URL"
+    },
+    "copyURL": {
+        "message": "Copier l'URL",
+        "description": "Copy URL"
+    },
+    "helpPageStgDebugTitle": {
+        "message": "Page de debug de STG",
+        "description": "STG debug page"
+    },
+    "helpPageStgDebugAutoDebugMainTitle": {
+        "message": "Une erreur est survenue dans cette extension",
+        "description": "An error occurred in the addon"
+    },
+    "windowNotHaveGroup": {
+        "message": "Cette fenêtre ne contient pas de groupe chargé",
+        "description": "This window does not have a loaded group"
+    },
+    "defaultGroup": {
+        "message": "Groupe par défaut",
+        "description": "Default group"
+    },
+    "moveToGroupIfNoneCatchTabRules": {
+        "message": "Si aucune des expressions régulières ne correspond à l'onglet, déplacer celui-ci vers le groupe :",
+        "description": "If none of the regular expressions match the tab, move it to the group:"
+    },
+    "dontMove": {
+        "message": "Ne pas déplacer",
+        "description": "Don't move"
+    },
+    "groupArchivedTitle": {
+        "message": "$groupName$ (archivé)",
+        "description": "My group (archived)",
+        "placeholders": {
+            "groupName": {
+                "content": "$1",
+                "example": "My group"
+            }
+        }
     }
 }

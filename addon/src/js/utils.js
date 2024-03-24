@@ -1,10 +1,6 @@
 
 import * as Constants from './constants.js';
 import JSON from './json.js';
-import * as Cache from './cache.js';
-import * as Containers from './containers.js';
-
-export const BROWSER_PAGES_STARTS = 'about:';
 
 const tagsToReplace = {
     '<': '&lt;',
@@ -16,6 +12,8 @@ const tagsToReplace = {
 
 const INNER_HTML = 'innerHTML';
 
+export const IS_MAC = (navigator.userAgentData?.platform || navigator.platform || '').toLowerCase().includes('mac');
+
 export function unixNow() {
     return Math.round(Date.now() / 1000);
 }
@@ -25,18 +23,70 @@ export function type(obj) {
     return Object.prototype.toString.call(obj).replace(TYPE_REGEXP, '').toLowerCase();
 }
 
-export function catchFunc(asyncFunc) {
-    let fromStack = new Error().stack;
-    return async function() {
-        try {
-            return await asyncFunc(...Array.from(arguments));
-        } catch (e) {
-            e.message = `[catchFunc]: ${e.message}`;
-            e.stack = fromStack + e.stack;
-            e.arguments = JSON.clone(Array.from(arguments));
-            self.errorEventHandler(e);
+const DEFAULT_BRACKETS = ['{', '}'];
+// if last element is Boolean true - remove empty keys, else
+// aaa {a!b} ccc => aaa b ccc
+export function format(str, ...args) {
+    const lastArg = args[args.length - 1];
+
+    let removeEmptyKeys = false,
+        beforeValueFunc = value => value;
+
+    if (lastArg === true) {
+        removeEmptyKeys = true;
+        args.pop();
+    } else if (typeof lastArg === 'function') { // if last argument is function = call this func for every value in set
+        beforeValueFunc = lastArg;
+        args.pop();
+    }
+
+    args = args.map(function(arg, key) {
+        if (arg !== Object(arg)) { // if primitive type: string, integer, float, null, undefined
+            return {
+                [key]: arg,
+            };
         }
-    };
+
+        return arg;
+    });
+
+    const [bracketStart, bracketEnd] = Array.isArray(this) ? this : DEFAULT_BRACKETS,
+        replaceRegExp = new RegExp(bracketStart + '(.+?)' + bracketEnd, 'g'), // /{\s*(.+?)\s*}/g
+        result = str
+            .replace(replaceRegExp, function(match, key) {
+                const [clearKey, defaultKeyValue] = key.split('!'),
+                    keyParts = clearKey.trim().split('.'),
+                    res = args.reduce(function(accum, arg) {
+                        if (false !== accum) {
+                            return accum;
+                        }
+
+                        return keyParts.reduce(function(keyAcc, k) {
+                            if (keyAcc === Object(keyAcc) && undefined !== keyAcc[k]) {
+                                return beforeValueFunc(false === keyAcc[k] ? 'false' : keyAcc[k]);
+                            }
+
+                            return false;
+                        }, arg);
+                    }, false);
+
+                if (false === res) {
+                    if (removeEmptyKeys) {
+                        return defaultKeyValue === undefined ? '' : defaultKeyValue;
+                    } else {
+                        return defaultKeyValue === undefined ? bracketStart + key + bracketEnd : defaultKeyValue;
+                    }
+                }
+
+                return res !== Object(res) ? res : JSON.stringify(res);
+            });
+
+    return result;
+}
+
+export function isEqualPrimitiveArrays(array1, array2) {
+    const array2Sorted = array2.slice().sort();
+    return array1.length === array2.length && array1.slice().sort().every((value, index) => value === array2Sorted[index]);
 }
 
 /* function formatBytes(bytes, decimals = 2) {
@@ -163,12 +213,16 @@ export function getSupportedExternalExtensionName(extId) {
     return Constants.EXTENSIONS_WHITE_LIST[extId] ? Constants.EXTENSIONS_WHITE_LIST[extId].title : 'Unknown';
 }
 
+const cspUrls = [
+    'chrome://mozapps/skin/',
+    'chrome://devtools/skin/images/profiler-stopwatch.svg',
+];
 export function isAvailableFavIconUrl(favIconUrl) {
     if (!favIconUrl) {
         return false;
     }
 
-    return !favIconUrl.startsWith('chrome://mozapps/skin/');
+    return !cspUrls.some(url => favIconUrl.startsWith(url));
 }
 
 export function normalizeTabFavIcon(tab) {
@@ -332,12 +386,27 @@ export function isElementVisible(element) {
     // return isVisible;
 }
 
-export function getRandomInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1) + min);
+export function getRandomInt(min = 1, max = Number.MAX_SAFE_INTEGER, step = 1) {
+    const randomBuffer = new Uint32Array(1);
+
+    self.crypto.getRandomValues(randomBuffer);
+
+    let randomNumber = randomBuffer[0] / (0xffffffff + 1);
+
+    min = Math.ceil(min);
+    max = Math.floor(max);
+
+    const result = Math.floor(randomNumber * (max - min + 1)) + min;
+
+    if ((result % step) !== 0 && min <= step && max >= step) {
+        return getRandomInt(min, max, step);
+    }
+
+    return result;
 }
 
 export function randomColor() {
-    return 'hsla(' + getRandomInt(0, 360) + ', 100%, 50%, 1)';
+    return 'hsla(' + getRandomInt(0, 360, 10) + ', 100%, 50%, 1)';
 }
 
 export function safeColor(color) {
@@ -403,7 +472,7 @@ export function normalizeGroupIcon(iconUrl) {
 }
 
 export function resizeImage(img, height, width, useTransparency = true, ...canvasParams) { // img: new Image()
-    let canvas = document.createElement('canvas'),
+    const canvas = document.createElement('canvas'),
         context = canvas.getContext('2d');
 
     if (!useTransparency) {
@@ -419,7 +488,7 @@ export function resizeImage(img, height, width, useTransparency = true, ...canva
 }
 
 function isCanvasBlank(canvas, useTransparency, ...canvasParams) {
-    let blank = document.createElement('canvas'),
+    const blank = document.createElement('canvas'),
         canvasDataUrl = canvas.toDataURL(...canvasParams);
 
     if (!useTransparency) {
@@ -432,7 +501,7 @@ function isCanvasBlank(canvas, useTransparency, ...canvasParams) {
     let isEmpty = canvasDataUrl === blank.toDataURL(...canvasParams);
 
     if (!isEmpty) {
-        let blankContext = blank.getContext('2d');
+        const blankContext = blank.getContext('2d');
 
         blankContext.fillStyle = 'rgb(255, 255, 255)';
         blankContext.fillRect(0, 0, blank.width, blank.height);
@@ -487,7 +556,8 @@ export function extractKeys(obj, keys, useClone = false) {
 }
 
 export function arrayToObj(arr, primaryKey = 'id', accum = {}) {
-    return arr.reduce((acc, obj) => (acc[obj[primaryKey]] = obj, acc), accum);
+    arr.forEach(obj => accum[obj[primaryKey]] = obj);
+    return accum;
 }
 
 export function wait(ms = 200) {
@@ -502,20 +572,20 @@ export function compareVersions(a, b) {
         return 0;
     }
 
-    let regExStrip0 = /(\.0+)+$/,
+    const regExStrip0 = /(\.0+)+$/,
         segmentsA = a.replace(regExStrip0, '').split('.'),
         segmentsB = b.replace(regExStrip0, '').split('.'),
         l = Math.min(segmentsA.length, segmentsB.length);
 
     for (let i = 0; i < l; i++) {
-        let diff = parseInt(segmentsA[i], 10) - parseInt(segmentsB[i], 10);
+        const diff = parseInt(segmentsA[i], 10) - parseInt(segmentsB[i], 10);
 
         if (diff) {
             return diff > 0 ? 1 : -1;
         }
     }
 
-    let diff = segmentsA.length - segmentsB.length;
+    const diff = segmentsA.length - segmentsB.length;
 
     if (diff) {
         return diff > 0 ? 1 : -1;
@@ -533,3 +603,68 @@ export function getThemeApply(theme) {
 
     return (theme === 'auto' && isDark) ? 'dark' : theme;
 }
+
+export const UI_LANG = browser.i18n.getUILanguage();
+
+export const DATE_LOCALE_VARIABLES = Object.freeze({
+    get 'date-full'() {
+        return (new Date).toLocaleString(UI_LANG, {dateStyle: 'full'});
+    },
+    get 'date-medium'() {
+        return (new Date).toLocaleString(UI_LANG, {dateStyle: 'medium'});
+    },
+    get 'date-short'() {
+        return (new Date).toLocaleString(UI_LANG, {dateStyle: 'short'});
+    },
+    get 'time-medium'() {
+        return (new Date).toLocaleString(UI_LANG, {timeStyle: 'medium'});
+    },
+    get 'time-short'() {
+        return (new Date).toLocaleString(UI_LANG, {timeStyle: 'short'});
+    },
+    get 'year-numeric'() {
+        return (new Date).toLocaleString(UI_LANG, {year: 'numeric'});
+    },
+    get 'year-2-digit'() {
+        return (new Date).toLocaleString(UI_LANG, {year: '2-digit'});
+    },
+    get 'month-numeric'() {
+        return (new Date).toLocaleString(UI_LANG, {month: 'numeric'});
+    },
+    get 'month-long'() {
+        return (new Date).toLocaleString(UI_LANG, {month: 'long'});
+    },
+    get 'month-short'() {
+        return (new Date).toLocaleString(UI_LANG, {month: 'short'});
+    },
+    get 'weekday'() {
+        return (new Date).toLocaleString(UI_LANG, {weekday: 'long'});
+    },
+    get 'weekday-short'() {
+        return (new Date).toLocaleString(UI_LANG, {weekday: 'short'});
+    },
+    get 'day-numeric'() {
+        return (new Date).toLocaleString(UI_LANG, {day: 'numeric'});
+    },
+    get 'day-2-digit'() {
+        return (new Date).toLocaleString(UI_LANG, {day: '2-digit'});
+    },
+    get 'day-period'() {
+        return (new Date).toLocaleString(UI_LANG, {dayPeriod: 'long'});
+    },
+    get 'hour-numeric'() {
+        return (new Date).toLocaleString(UI_LANG, {hour: 'numeric'});
+    },
+    get 'hour-2-digit'() {
+        return (new Date).toLocaleString(UI_LANG, {hour: '2-digit'});
+    },
+    get 'hour-minute-ampm'() {
+        return (new Date).toLocaleString(UI_LANG, {hour: 'numeric', minute: 'numeric', hour12: true});
+    },
+    get 'minute'() {
+        return (new Date).toLocaleString(UI_LANG, {minute: '2-digit'});
+    },
+    get 'second'() {
+        return (new Date).toLocaleString(UI_LANG, {second: '2-digit'});
+    },
+});

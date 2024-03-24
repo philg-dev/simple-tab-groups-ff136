@@ -270,8 +270,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Qui puoi aggiungere le scorciatoie. <br>Limitazioni:<br>1. Queste scorciatoie funzioneranno solamente nelle pagine web (http:, https:). Sulle pagine del browser (about:) non funzionano a causa delle limitazioni imposte delle WebExtension API. <br>2. Alcune delle scorciatoie non funzioneranno con alcuni configurazioni della tastiera. La scorciatoia creata con la tastiera inglese <code>Ctrl + ~</code> non funziona sulla tastiera russa, perché questo tasto ha un altro codice. Per sistemare questo problema, crea una scorciatoia con un altro tasto: per il caso precedente, aggiungi la scorciatoia <code> Ctrl + Ё</code>.",
-        "description": "Hotkeys description"
+        "message": "Puoi modificare le scorciatoie sulla pagina <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Gestire le scorciatoie da tastiera per i componenti aggiuntivi in Firefox</a>. Funzioneranno su tutte le finestre e le pagine del browser.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "Aggiungi una scorciatoia",
@@ -282,8 +282,8 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Premere i tasti",
-        "description": "Press key here"
+        "message": "Inserisci una scorciatoia",
+        "description": "Type a shortcut"
     },
     "selectAction": {
         "message": "Seleziona l'azione",
@@ -405,11 +405,7 @@
         "message": "Stile icona",
         "description": "Icon style"
     },
-    "discardTabsAfterHide": {
-        "message": "Riduci il consumo di RAM per le schede che sono state nascoste",
-        "description": "Discard tabs after hide (this will save the RAM)"
-    },
-    "discardAfterHideExcludeAudioTabs": {
+    "discardExcludeAudioTabs": {
         "message": "Escludi schede con suono",
         "description": "Exclude tabs with sound"
     },
@@ -448,10 +444,6 @@
     "ffFailedAndLostDataMessage": {
         "message": "Firefox ha smesso di funzionare correttamente e tutti i gruppi sono stati persi.\nSe hai a disposizione un backup è possibile recuperare i gruppi.",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
-    },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "Stile dell'icona per un nuovo gruppo",
-        "description": "Icon style for a new group"
     },
     "openGroupInNewWindow": {
         "message": "Apri il gruppo in una nuova finestra",
@@ -599,7 +591,7 @@
         "message": "Crea un nuovo gruppo quando viene aperta una nuova finestra",
         "description": "Create a new group when opening a new window"
     },
-    "prependGroupTitleToWindowTitle": {
+    "prependTitleToWindow": {
         "message": "Aggiungi il nome del gruppo in testa al titolo della finestra",
         "description": "Prepend group title to window title"
     },
@@ -645,10 +637,6 @@
         "message": "Non si dispone dei permessi per accedere ai segnalibri. Consenti l'accesso ai segnalibri nelle impostazioni dell'estensione",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
-    "exportGroupToMainBookmarkFolder": {
-        "message": "Esporta i gruppi nella cartella dei segnalibri \"STG bookmarks\"",
-        "description": "Export groups to \"STG bookmarks\" bookmark folder"
-    },
     "exportGroupToBookmarks": {
         "message": "Esporta il gruppo nei segnalibri",
         "description": "Export group to bookmarks"
@@ -671,10 +659,6 @@
         "message": "Questo gruppo non ha nessuna scheda",
         "description": "This group has no tabs"
     },
-    "autoBackupGroupsToBookmarks": {
-        "message": "Backup automatico di tutti i gruppi nei segnalibri",
-        "description": "Auto backup all groups to bookmarks"
-    },
     "exportAllGroupsToBookmarks": {
         "message": "Esporta tutti i gruppi nei segnalibri",
         "description": "Export all groups to bookmarks"
@@ -686,10 +670,6 @@
     "discardTabTitle": {
         "message": "Sospendi la scheda",
         "description": "Discard tab"
-    },
-    "autoBackupGroupsToFile": {
-        "message": "Backup automatico di tutti i gruppi in un file (il file è salvato nella cartella dei download)",
-        "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
         "message": "Nome della cartella",
@@ -706,10 +686,6 @@
     "showOtherTabs": {
         "message": "Mostra le altre schede",
         "description": "Show other tabs"
-    },
-    "dontDiscardTabsAfterHideThisGroup": {
-        "message": "Non sospendere le schede di questo gruppo dopo che sono state nascoste",
-        "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
         "message": "Mostra una notifica dopo che un gruppo è stato eliminato",
@@ -822,8 +798,8 @@
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
     "leaveBookmarksOfClosedTabs": {
-        "message": "Lascia i segnalibri della schede chiuse (i segnalibri saranno separati da un separatore)",
-        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+        "message": "Lascia i segnalibri della schede chiuse",
+        "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "Abilita modalità DEBUG",
@@ -987,28 +963,6 @@
         "message": "Cerca o premi la freccia destra per mostrare la scheda o il gruppo attivi",
         "description": "Search or right arrow to focus on active tab/group"
     },
-    "thisGroupIsMain": {
-        "message": "Questo gruppo è stato impostato come principale",
-        "description": "This group is marked as main"
-    },
-    "setGroupAsMain": {
-        "message": "Imposta questo gruppo come principale",
-        "description": "Set this group as main"
-    },
-    "thisGroupWasMain": {
-        "message": "Informazione\nQuesto gruppo è stato impostato come principale",
-        "description": "Notice\nThis group was marked as the main"
-    },
-    "moveToMainIfNotInCatchTabRules": {
-        "message": "Sposta le schede di questo gruppo nel gruppo \"$grouptitle$\" se nessuna delle espressioni regolari combacia",
-        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
-        "placeholders": {
-            "grouptitle": {
-                "content": "$1",
-                "example": "My main group"
-            }
-        }
-    },
     "noContainerTitle": {
         "message": "Nessun contenitore",
         "description": "No container"
@@ -1048,10 +1002,6 @@
                 "example": "Facebook Container"
             }
         }
-    },
-    "hotkeysDescription2": {
-        "message": "Puoi modificare le scorciatoie sulla pagina <a href=\"https://support.mozilla.org/it/kb/gestire-scorciatoie-componenti-aggiuntivi-firefox\" target=\"_blank\">Gestire le scorciatoie da tastiera per i componenti aggiuntivi in Firefox</a>. Funzioneranno su tutte le finestre e le pagine del browser.",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "Silenzia la scheda",

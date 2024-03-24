@@ -24,7 +24,7 @@ html.fluid #root {
 
 html.fluid,
 html.fluid body,
-html.fluid .notes,
+html.fluid #notes-wrapper,
 html.fluid .EasyMDEContainer,
 html.fluid .EasyMDEContainer .CodeMirror,
 html.fluid .EasyMDEContainer .editor-preview {
@@ -32,36 +32,49 @@ html.fluid .EasyMDEContainer .editor-preview {
 }
 
 html.fluid body #root {
-    height: 86vh;
+    height: calc(100vh - 60px);
 }
 
 html.fluid .EasyMDEContainer .fullscreen ~ .editor-preview {
     height: calc(100% - 50px);
 }
 
-.group {
+#group-wrapper {
     display: flex;
     align-items: center;
     margin-bottom: 5px;
 }
 
-.group > * + * {
+#group-wrapper > * + * {
     margin-left: 5px;
 }
 
-.group .icon {
+#group-wrapper .title {
+    overflow-wrap: anywhere;
+    flex-grow: 1;
+}
+
+.icon {
     line-height: 0;
 }
-
-.group .title {
-    overflow-wrap: anywhere;
-}
-
-#groupIcon {
+.icon > img {
     max-height: 16px;
     max-width: 16px;
     width: 16px;
     height: 16px;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.hidden {
+    display: none;
+}
+
+#needInstallSTGExtension:not(.hidden) ~ [id$="wrapper"],
+#windowNotHaveGroup:not(.hidden) ~ [id$="wrapper"] {
+    display: none;
 }
 
 /* easyMDE */
@@ -88,8 +101,17 @@ html.fluid .EasyMDEContainer .fullscreen ~ .editor-preview {
 }
 
 .CodeMirror-vscrollbar,
+.CodeMirror-hscrollbar,
 .editor-preview {
     scrollbar-width: thin;
+}
+
+.editor-preview pre {
+    white-space: break-spaces;
+}
+
+.editor-preview table {
+    border-collapse: collapse;
 }
 
 html:not(.fluid) .CodeMirror-scroll {

@@ -3,25 +3,28 @@
 
     import Vue from 'vue';
 
-    import popup from '../js/popup.vue';
-    import editGroup from '../js/edit-group.vue';
+    import popup from '../components/popup.vue';
+    import editGroup from '../components/edit-group.vue';
     import contextMenu from '../components/context-menu.vue';
     import contextMenuTab from '../components/context-menu-tab.vue';
     import contextMenuTabNew from '../components/context-menu-tab-new.vue';
     import contextMenuGroup from '../components/context-menu-group.vue';
 
-    import backgroundSelf from 'background';
-    import * as Constants from 'constants';
-    import Messages from 'messages';
-    import Logger from 'logger';
-    import * as Containers from 'containers';
-    import * as Urls from 'urls';
-    import * as Cache from 'cache';
-    import * as Groups from 'groups';
-    import * as Windows from 'windows';
-    import * as Tabs from 'tabs';
-    import * as Utils from 'utils';
-    import JSON from 'json';
+    import backgroundSelf from '/js/background.js';
+    import * as Constants from '/js/constants.js';
+    import Messages from '/js/messages.js';
+    import Logger, {catchFunc} from '/js/logger.js';
+    import * as Containers from '/js/containers.js';
+    import * as Urls from '/js/urls.js';
+    import * as Cache from '/js/cache.js';
+    import * as Groups from '/js/groups.js';
+    import * as Windows from '/js/windows.js';
+    import * as Tabs from '/js/tabs.js';
+    import * as Utils from '/js/utils.js';
+    import JSON from '/js/json.js';
+
+    import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
+    import startUpData from '/js/mixins/start-up-data.mixin.js';
 
     window.logger = new Logger('Manage');
 
@@ -33,13 +36,34 @@
 
     Vue.config.errorHandler = errorEventHandler.bind(window.logger);
 
+    function showDebugMode() {
+        if (localStorage.enableDebug) {
+            const div = document.createElement('div');
+            div.innerText = browser.i18n.getMessage('loggingIsEnabledTitle');
+            Object.assign(div.style, {
+                position: 'fixed',
+                backgroundColor: 'coral',
+                padding: '0 4px',
+                borderRadius: '3px',
+                top: 0,
+                left: '50%',
+                transform: 'translate(-50%)',
+                cursor: 'pointer',
+            });
+            div.addEventListener('click', () => Messages.sendMessage('open-options-page', 'general'));
+            document.body.appendChild(div);
+        }
+    }
+
+    showDebugMode();
+
     const VIEW_GRID = 'grid',
         VIEW_DEFAULT = VIEW_GRID,
         availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'thumbnail', 'windowId']);
 
-    let loadPromise = null;
-
     export default {
+        name: 'manage-page',
+        mixins: [defaultGroupMixin, startUpData],
         data() {
             return {
                 DEFAULT_COOKIE_STORE_ID: Constants.DEFAULT_COOKIE_STORE_ID,
@@ -102,7 +126,7 @@
         },
         async mounted() {
             const log = logger.start('mounted');
-            const startUpData = await backgroundSelf.startUpData(this.options.showTabsWithThumbnailsInManageGroups);
+            const startUpData = await this.startUpData(this.options.showTabsWithThumbnailsInManageGroups);
 
             this.loadWindows(startUpData);
             this.loadGroups(startUpData);
@@ -129,7 +153,7 @@
                     Messages.sendMessageModule('BG.saveOptions', {
                             showTabsWithThumbnailsInManageGroups: value,
                         })
-                        .then(() => value && window.location.reload());
+                        .then(() => value && this.loadAvailableTabThumbnails());
                 }
             },
             showArchivedGroupsInManageGroups(value) {
@@ -202,11 +226,11 @@
                         if ('new-group' === to.data.item.id) {
                             this.moveTabToNewGroup(null, true);
                         } else {
-                            let tabIds = this.getTabIdsForMove(),
+                            const tabIds = this.getTabIdsForMove(),
                                 groupId = this.isGroup(to.data.item) ? to.data.item.id : to.data.group.id,
-                                index = this.isGroup(to.data.item) ? undefined : to.data.item.index;
+                                newTabIndex = this.isGroup(to.data.item) ? undefined : to.data.item.index;
 
-                            Messages.sendMessageModule('Tabs.move', tabIds, groupId, {newTabIndex: index});
+                            Messages.sendMessageModule('Tabs.move', tabIds, groupId, {newTabIndex});
                         }
                     })
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
@@ -471,7 +495,7 @@
                     },
                 };
 
-                const onMessage = Utils.catchFunc(async request => {
+                const onMessage = catchFunc(async request => {
                     logger.info('take message', request.action);
                     await listeners[request.action](request);
                 });
@@ -549,7 +573,7 @@
 
                 this.multipleTabIds = [];
 
-                return tabs;
+                return [...tabs];
             },
             async moveTabs(tabId, groupId, loadUnsync = false, showTabAfterMovingItIntoThisGroup, discardTabs) {
                 let tabIds = this.getTabIdsForMove(tabId);
@@ -648,7 +672,7 @@
                     data: group,
                     watch: {
                         title: function(title) {
-                            Groups.update(this.id, {
+                            Messages.sendMessageModule('Groups.update', this.id, {
                                 title: Groups.createTitle(title, this.id),
                             });
                         },
@@ -866,6 +890,14 @@
                 Messages.sendMessageModule('Groups.unload', id);
             },
 
+            saveEditedGroup(groupId, changes) {
+                this.groupToEdit = null;
+
+                if (Object.keys(changes).length) {
+                    Messages.sendMessageModule('Groups.update', groupId, changes);
+                }
+            },
+
             async toggleArchiveGroup({id, title, isArchive}) {
                 let ok = true;
 
@@ -999,7 +1031,7 @@
                 </div>
             </span>
             <div class="is-full-width has-text-right">
-                <button class="button" @click="addGroup">
+                <button class="button" @click="addGroup" @contextmenu="$refs.newGroupContextMenu.open($event)">
                     <span class="icon">
                         <img class="size-16" src="/icons/group-new.svg">
                     </span>
@@ -1292,6 +1324,39 @@
             @move-tab-new-group="moveTabToNewGroup"
             ></context-menu-tab>
 
+        <context-menu ref="newGroupContextMenu">
+            <ul class="is-unselectable">
+                <li @click="openDefaultGroup">
+                    <img src="/icons/icon.svg" class="size-16" />
+                    <span v-text="lang('defaultGroup')"></span>
+                </li>
+            </ul>
+        </context-menu>
+
+        <popup
+            v-if="openEditDefaultGroup"
+            :title="lang('defaultGroup')"
+            :buttons="
+                [{
+                    event: 'save-group',
+                    classList: 'is-success',
+                    lang: 'save',
+                }, {
+                    event: 'close-popup',
+                    lang: 'cancel',
+                }]
+            "
+            @save-group="() => $refs.editDefaultGroup.triggerChanges()"
+            @close-popup="openEditDefaultGroup = false"
+            >
+            <edit-group
+                ref="editDefaultGroup"
+                :group-to-edit="defaultGroup"
+                :is-default-group="true"
+                :group-to-compare="defaultCleanGroup"
+                @changes="saveDefaultGroup"></edit-group>
+        </popup>
+
         <popup
             v-if="groupToEdit"
             :title="lang('groupSettings')"
@@ -1306,12 +1371,13 @@
                 }]
             "
             @close-popup="groupToEdit = null"
-            @save-group="() => $refs.editGroup.saveGroup()"
+            @save-group="() => $refs.editGroup.triggerChanges()"
             >
             <edit-group
                 ref="editGroup"
-                :groupId="groupToEdit.id"
-                @saved="groupToEdit = null"></edit-group>
+                :group-to-edit="groupToEdit.$data"
+                :group-to-compare="groupToEdit.$data"
+                @changes="changes => saveEditedGroup(groupToEdit.id, changes)"></edit-group>
         </popup>
 
         <popup
@@ -1502,7 +1568,6 @@
             }
 
             > .body {
-                -moz-user-select: none;
                 user-select: none;
 
                 overflow-y: auto;

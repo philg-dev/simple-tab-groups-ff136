@@ -1,6 +1,5 @@
 import Logger from './logger.js';
 import * as Constants from './constants.js';
-import * as Utils from './utils.js';
 import * as Urls from './urls.js';
 import cacheStorage, {createStorage} from './cache-storage.js';
 
@@ -11,7 +10,7 @@ const extensions = cacheStorage.extensions ??= createStorage({});
 export async function init() {
     const log = logger.start('init');
 
-    await reloadExtensions();
+    await load();
 
     browser.management.onEnabled.addListener(onChanged);
     browser.management.onDisabled.addListener(onChanged);
@@ -21,42 +20,70 @@ export async function init() {
     log.stop();
 }
 
-async function reloadExtensions() {
-    const log = logger.start('reloadExtensions');
-    await Utils.wait(100);
+async function onChanged({type}) {
+    if (type === browser.management.ExtensionType.EXTENSION) {
+        await load();
+        detectConflictedExtensions();
+    }
+}
 
-    clearExtensions();
+async function load(extensionsStorage = extensions) {
+    const log = logger.start('load');
 
-    let addons = await browser.management.getAll();
+    await new Promise(res => setTimeout(res, 100));
+
+    const addons = await browser.management.getAll().catch(log.onCatch('cant load extensions'));
+
+    for (const id in extensionsStorage) delete extensionsStorage[id];
 
     addons.forEach(addon => {
         if (addon.type === browser.management.ExtensionType.EXTENSION) {
-            extensions[addon.id] = addon;
+            extensionsStorage[addon.id] = addon;
         }
     });
 
     log.stop();
+
+    return extensionsStorage;
 }
 
-function clearExtensions() {
-    for (let extId in extensions) delete extensions[extId];
+export function isEnabled(id, extensionsStorage = extensions) {
+    return extensionsStorage[id]?.enabled;
 }
 
-async function onChanged({type}) {
-    if (type === browser.management.ExtensionType.EXTENSION) {
-        await reloadExtensions();
-        await detectConflictedExtensions();
+export function detectConflictedExtensions(extensionsStorage = extensions) {
+    Constants.CONFLICTED_EXTENSIONS.some(id => {
+        if (isEnabled(id, extensionsStorage)) {
+            if (!isIgnoredConflictedExtension(id)) {
+                Urls.openUrl('extensions-that-conflict-with-stg', true);
+                return true;
+            }
+        } else if (extensionsStorage[id] && isIgnoredConflictedExtension(id)) {
+            dontIgnoreConflictedExtension(id);
+        }
+    });
+}
+
+export function isIgnoredConflictedExtension(extId) {
+    return getIgnoredConflictedExtensions().includes(extId);
+}
+
+export function ignoreConflictedExtension(extId) {
+    const ignored = getIgnoredConflictedExtensions();
+    if (!ignored.includes(extId)) {
+        ignored.push(extId);
     }
+    localStorage.ignoredConflictedExtensions = JSON.stringify(ignored);
 }
 
-export function isEnabled(id) {
-    return extensions[id]?.enabled;
+export function dontIgnoreConflictedExtension(extId) {
+    let ignored = getIgnoredConflictedExtensions();
+    ignored = ignored.filter(id => id !== extId);
+    localStorage.ignoredConflictedExtensions = JSON.stringify(ignored);
 }
 
-export async function detectConflictedExtensions() {
-    if (Constants.CONFLICTED_EXTENSIONS.some(isEnabled)) {
-        await Urls.openUrl('extensions-that-conflict-with-stg', true);
-    }
+export function getIgnoredConflictedExtensions() {
+    return JSON.parse(localStorage.ignoredConflictedExtensions || null) || [];
 }
 
 // can't have permission to read other addon icon :((
@@ -71,14 +98,14 @@ export async function detectConflictedExtensions() {
     return '/icons/extension-generic.svg';
 } */
 
-export function getExtensionByUUID(uuid) {
+export function getExtensionByUUID(uuid, extensionsStorage = extensions) {
     if (!uuid) {
         return;
     }
 
-    for (let i in extensions) {
-        if (extensions[i]?.hostPermissions?.some(url => url.includes(uuid))) {
-            return extensions[i];
+    for (let i in extensionsStorage) {
+        if (extensionsStorage[i]?.hostPermissions?.some(url => url.includes(uuid))) {
+            return extensionsStorage[i];
         }
     }
 }

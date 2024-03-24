@@ -57,6 +57,10 @@
         "message": "Отказ",
         "description": "Cancel"
     },
+    "close": {
+        "message": "Затваряне",
+        "description": "Close"
+    },
     "searchPlaceholder": {
         "message": "Търсене",
         "description": "Search placeholder"
@@ -82,6 +86,10 @@
     "closePopupAfterChangeGroup": {
         "message": "Затваряне на менюто при смяна на група",
         "description": "Close popup after changing group"
+    },
+    "closePopupAfterSelectTab": {
+        "message": "Затваряне на изскачащото меню след избор на раздел",
+        "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
         "message": "Отваряне на „Управление на групи“ в раздел",
@@ -210,7 +218,7 @@
         }
     },
     "deleteTab": {
-        "message": "Изтриване на раздел",
+        "message": "Изтриване на раздела",
         "description": "Delete tab"
     },
     "createNewTab": {
@@ -262,7 +270,7 @@
         "description": "Regular expressions"
     },
     "regexpForTabsHelp": {
-        "message": "Въведете регулярни изрази за адреси от мрежата. При съвпадение разделът автоматично ще бъде премесен в тази група.\nПо едно правило на ред, но може да има неограничен брой правила.\nПримери:\ngithub\\.com/drive4ik/simple-tab-groups - прехваща страниците от хранилището на добавката\nbugzilla\\.mozilla\\.org - прехваща страници от дефектите на Firefox\n(facebook|twitter|youtube)\\.com - прехваща страници от социалните мрежи",
+        "message": "Въведете регулярни изрази за адреси в интернет. При съвпадение разделът автоматично ще бъде премесен в тази група.\nПо едно правило на ред, но може да има неограничен брой правила.\nПримери:\ngithub\\.com/drive4ik/simple-tab-groups - прехваща страниците от хранилището на добавката\nbugzilla\\.mozilla\\.org - прехваща страници от дефектите на Firefox\n(facebook|twitter|youtube)\\.com - прехваща страници от социални мрежи",
         "description": "Regular exceptions helper"
     },
     "hotkeysTitle": {
@@ -270,8 +278,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Тук се добавят клавишни комбинации.<br>Ограничения:<br>1. Тези клавишни комбинации ще работят само в страници от интернет (http:, https:), а не в служебните (about:) страници на четеца, защото ППИ на WebExtensions не го позволява.<br>2. Някои комбинации няма да работят с всички клавиатурни подредби. Например, комбинацията <code>Ctrl + ~</code>, създадена с актива английска подредба няма да работи ако в момента е активна българската, защото в българската подредба този клавиш има друг код. За да заобиколите този недостатък просто създайте същата комбинация докато е активна българска клавиатурна подредба: <code>Ctrl + Ю</code>.",
-        "description": "Hotkeys description"
+        "message": "Също така можете да настроите клавишни комбинации на страницата <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Управление на клавишни комбинации на разширения</a>. Ще работят във всички прозорци и на всички страници.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "Нова комбинация",
@@ -282,16 +290,20 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Натиснете комбинация",
-        "description": "Press key here"
+        "message": "Натиснете клавиши",
+        "description": "Type a shortcut"
     },
     "selectAction": {
-        "message": "Избиране",
+        "message": "Изберете действие",
         "description": "Select action"
     },
     "selectGroup": {
         "message": "Избор на група",
         "description": "Select group"
+    },
+    "unknownGroup": {
+        "message": "Непозната група",
+        "description": "Unknown group"
     },
     "hotkeyActionTitleLoadNextGroup": {
         "message": "Отваря следващата група",
@@ -354,11 +366,11 @@
         "description": "Move selected tabs to custom group"
     },
     "hotkeyActionTitleDiscardGroup": {
-        "message": "Освобождава памет от разделите в групата",
+        "message": "Освобождаване на памет от разделите в групата",
         "description": "Hotkey action Discard group"
     },
     "hotkeyActionTitleDiscardOtherGroups": {
-        "message": "Освобождава памет от разделите в другите групи",
+        "message": "Освобождаване на памет от разделите в другите групи",
         "description": "Hotkey action Discard other groups"
     },
     "hotkeyActionTitleReloadAllTabsInCurrentGroup": {
@@ -407,9 +419,9 @@
     },
     "discardTabsAfterHide": {
         "message": "Освобождаване на памет от скрити раздели",
-        "description": "Discard tabs after hide (this will save the RAM)"
+        "description": "Unload tabs from memory after closing a group"
     },
-    "discardAfterHideExcludeAudioTabs": {
+    "discardExcludeAudioTabs": {
         "message": "С изключение на разделите със звук",
         "description": "Exclude tabs with sound"
     },
@@ -449,10 +461,6 @@
         "message": "Firefox се срина и всички групи от раздели са загубени.\nАко имате резервно копие възстановете групите от него.",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
     },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "Пиктограма на нова група",
-        "description": "Icon style for a new group"
-    },
     "openGroupInNewWindow": {
         "message": "Отваряне на групата в прозорец",
         "description": "Open group in new window"
@@ -464,6 +472,14 @@
     "showTabAfterMovingItIntoThisGroup": {
         "message": "Отваряне на раздела след автоматично преместване",
         "description": "Show the tab after auto-moving it into this group"
+    },
+    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+        "message": "Само ако текущият раздел е преместван",
+        "description": "Only if the active tab has been moved"
+    },
+    "showNotificationAfterMovingTabIntoThisGroup": {
+        "message": "Показване на известие, когато раздели биват преместени в тази група",
+        "description": "Show a notification when tabs are moved to this group"
     },
     "tabMoving": {
         "message": "Преместване на раздели",
@@ -599,7 +615,7 @@
         "message": "Създаване на група при отваряне на прозорец",
         "description": "Create a new group when opening a new window"
     },
-    "prependGroupTitleToWindowTitle": {
+    "prependTitleToWindow": {
         "message": "Добавяне на името на групата към името на прозореца",
         "description": "Prepend group title to window title"
     },
@@ -645,10 +661,6 @@
         "message": "Добавката няма достъп до отметките. Разрешете достъпа в настройките на добавката",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
-    "exportGroupToMainBookmarkFolder": {
-        "message": "Изнасяне на групите в папка „STG bookmarks“ в отметките",
-        "description": "Export groups to \"STG bookmarks\" bookmark folder"
-    },
     "exportGroupToBookmarks": {
         "message": "Изнасяне на групата в отметките",
         "description": "Export group to bookmarks"
@@ -671,10 +683,6 @@
         "message": "Групата не съдържа раздели",
         "description": "This group has no tabs"
     },
-    "autoBackupGroupsToBookmarks": {
-        "message": "Създаване на резервно копие на групите в отметките",
-        "description": "Auto backup all groups to bookmarks"
-    },
     "exportAllGroupsToBookmarks": {
         "message": "Изнасяне на групите в отметките",
         "description": "Export all groups to bookmarks"
@@ -686,10 +694,6 @@
     "discardTabTitle": {
         "message": "Освобождаване на памет от раздела",
         "description": "Discard tab"
-    },
-    "autoBackupGroupsToFile": {
-        "message": "Автоматични резервни копия на групите във файл (в папката за изтегляния)",
-        "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
         "message": "Име на папката",
@@ -706,10 +710,6 @@
     "showOtherTabs": {
         "message": "Показване на другите раздели",
         "description": "Show other tabs"
-    },
-    "dontDiscardTabsAfterHideThisGroup": {
-        "message": "Без освобождаване на памет от разделите в групата след смяната ѝ",
-        "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
         "message": "Показване на известие след изтриване на група",
@@ -818,27 +818,35 @@
         "description": "Welcome to Simple Tab Groups"
     },
     "helpPageWelcomeDescription": {
-        "message": "Моля, отметнете „Възстановяване на предишната сесия“ в настройките на четеца.<br>Това е необходимо, за да бъде запазена връзката между групите и разделите<br>В противен случай при отваряне на четеца разделите няма да бъдат заредени<br>и ще бъдат недостъпни за добавката и ще спре да работи.",
+        "message": "Oтметнете „Възстановяване на предишната сесия“ в настройките на четеца.<br>Това е необходимо, за да бъде запазена връзката между групите и разделите.<br>В противен случай при отваряне на четеца разделите няма да бъдат заредени<br>и ще бъдат недостъпни за добавката и тя ще спре да работи.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
+    "exportToBookmarksWhenAutoBackup": {
+        "message": "Запазване на групите в отметките при автоматично резервно копие",
+        "description": "Save the group to bookmarks when auto backup"
+    },
     "leaveBookmarksOfClosedTabs": {
-        "message": "Запазване на отметките на затворени раздели (под разделителя)",
-        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+        "message": "Преместване на отметките на затворените раздели под разделителя",
+        "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "Включване на режим DEBUG",
         "description": "Enable DEBUG"
+    },
+    "disableDebugTitle": {
+        "message": "Изключване на режим DEBUG",
+        "description": "Disable DEBUG"
     },
     "loggingIsEnabledTitle": {
         "message": "записване в журнал",
         "description": "logging is enabled"
     },
     "loggingIsAutoEnabledTitle": {
-        "message": "автоматично записване в журнал поради грешка в добавката",
+        "message": "автоматично записване в дневник поради грешка в добавката",
         "description": "logging was auto-enabled due to an error in addon"
     },
     "loggingDescription": {
-        "message": "Моля, отметнете полето само ако трябва да пресъздадете грешка и да изпратите журнала на автора. Отмятането на това поле ще доведе до чувствително намаляване на производителността на добавката, тъй като всички нейни действия се отразяват в журнала. След като успешно пресъздадете грешката махнете отметката и добавката ще ви предложи да запазите журнала във файл. В случай на грешка добавката сама може да отметне това поле. В този случай трябва да махнете отметката и пак да запазите журнала във файл.<br>Моля, изпратете този файл по имейл на <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br><span class=\"has-text-danger\">Внимание! Журналът не съдържа лична информация като пароли, отметки и т.н.</span><br>Той е необходим за пресъздаване на проблема и неговото отстраняване от автора.<br>Поздрави!",
+        "message": "Отметнете полето само ако трябва да пресъздадете грешка и да изпратите дневника на автора. Отмятането му ще доведе до чувствително намаляване на производителността на добавката, тъй като всички нейни действия бъдат отразени в дневника. След като успешно пресъздадете грешката махнете отметката и добавката ще ви предложи да запазите дневника във файл. В случай на грешка добавката сама може да отметне това поле. В този случай трябва да махнете отметката и пак да запазите дневника във файл.<br>Изпратете файл по електронна поща на <a href=\"mailto:drive4ik+stg@protonmail.com\">drive4ik+stg@protonmail.com</a><br><span class=\"has-text-danger\">Внимание! Дневникът не съдържа лична информация като пароли, отметки и т.н.</span><br>Той е необходим за пресъздаване на проблема и неговото отстраняване от автора.<br>Поздрави!",
         "description": "logging description"
     },
     "archiveGroup": {
@@ -870,11 +878,11 @@
         }
     },
     "updateAddonToLatestVersion": {
-        "message": "Моля, обновете добавката до последното ѝ издание.",
+        "message": "Обновете добавката до последното ѝ издание.",
         "description": "Please, update addon to latest version"
     },
     "hotkeyActionTitleRenameGroup": {
-        "message": "Преименуване на група",
+        "message": "Преименуване на групата",
         "description": "Rename group"
     },
     "noGroupsAvailable": {
@@ -987,28 +995,6 @@
         "message": "Търсене или дясна стрелка за посочване на активния раздел/група",
         "description": "Search or right arrow to focus on active tab/group"
     },
-    "thisGroupIsMain": {
-        "message": "Групата е избрана като главна",
-        "description": "This group is marked as main"
-    },
-    "setGroupAsMain": {
-        "message": "Избиране за главна група",
-        "description": "Set this group as main"
-    },
-    "thisGroupWasMain": {
-        "message": "Предупреждение\nГрупата е избрана за главна",
-        "description": "Notice\nThis group was marked as the main"
-    },
-    "moveToMainIfNotInCatchTabRules": {
-        "message": "Преместване на разделите от тази група в „$grouptitle$“ ако не съвпадат с никой от регулярните изрази",
-        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
-        "placeholders": {
-            "grouptitle": {
-                "content": "$1",
-                "example": "My main group"
-            }
-        }
-    },
     "noContainerTitle": {
         "message": "Без изолатор",
         "description": "No container"
@@ -1049,10 +1035,6 @@
             }
         }
     },
-    "hotkeysDescription2": {
-        "message": "Също така можете да настроите клавишни комбинации на страницата <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Управление на клавишни комбинации на разширения</a>. Ще работят във всички прозорци и на всички страници.",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
-    },
     "muteTab": {
         "message": "Спиране звука на раздела",
         "description": "Mute tab"
@@ -1082,7 +1064,7 @@
         "description": "Database error in Simple Tab Groups"
     },
     "helpPageDbErrorReinstallDescription": {
-        "message": "За съжаление има грешка при прочитане на данните на добавката STG от банката от данни на Firefox. В момента добавката е спряна. За да подновите работа с нея, направете следното:",
+        "message": "За съжаление възникна грешка при прочитане на данните на добавката STG от хранилището на Firefox. В момента добавката е спряна. За да подновите работа с нея, направете следното:",
         "description": "Unfortunately, an error occurred while reading data from the STG addon from the Firefox database. At the moment, the addon is stopped. To resume the add-on, do the following:"
     },
     "helpPageDbErrorReinstallDescription2": {
@@ -1090,7 +1072,7 @@
         "description": "Restart Firefox Browser (for Linux and Mac OS with process termination)"
     },
     "helpPageDbErrorReinstallDescription3": {
-        "message": "Ако виждате повторно този прозорец преинсталирайте добавката:",
+        "message": "Ако виждате повторно този прозорец инсталирайте добавката отново:",
         "description": "If you see this window again, try reinstalling the addon:"
     },
     "helpPageDbErrorReinstallDescription4": {
@@ -1106,7 +1088,7 @@
         "description": "Install STG Addon"
     },
     "helpPageDbErrorReinstallDescription7": {
-        "message": "Възстановете последното резервно копие от данните на добавката STG, намиращо се в папката за изтегляния на Firefox, наречена „STG-Backups„.<br>Можете да го направите в настройките на добавката",
+        "message": "Възстановете последното резервно копие на данните на добавката STG, намиращо се в папката за изтегляния на Firefox, наречена „STG-Backups“.<br>Можете да го направите в настройките на добавката",
         "description": "Restore the latest STG addon data backup located in the Firefox downloads folder \"STG-backups\".<br>You can restore backup in addon settings"
     },
     "helpPageDbErrorReinstallOpenFFDownloadsFolder": {
@@ -1122,7 +1104,7 @@
         "description": "Only groups"
     },
     "autoBackupByDayIndexTitle": {
-        "message": "Номера на резервното копие е деня от месеца",
+        "message": "Номерът на резервното копие е деня от месеца",
         "description": "Backup number as day of month"
     },
     "autoBackupByDayIndexDescription": {
@@ -1180,5 +1162,47 @@
     "group": {
         "message": "Група",
         "description": "Group"
+    },
+    "helpPageUnsupportedUrlTitle": {
+        "message": "Неподдържан адрес",
+        "description": "Unsupported URL"
+    },
+    "copyURL": {
+        "message": "Копиране на адреса",
+        "description": "Copy URL"
+    },
+    "helpPageStgDebugTitle": {
+        "message": "Страница на STG за отстраняване на дефекти",
+        "description": "STG debug page"
+    },
+    "helpPageStgDebugAutoDebugMainTitle": {
+        "message": "В добавката възникна грешка",
+        "description": "An error occurred in the addon"
+    },
+    "windowNotHaveGroup": {
+        "message": "Този прозорец няма заредена група",
+        "description": "This window does not have a loaded group"
+    },
+    "defaultGroup": {
+        "message": "Група по подразбиране",
+        "description": "Default group"
+    },
+    "moveToGroupIfNoneCatchTabRules": {
+        "message": "Ако никой от регулярните изрази не съвпада с раздела, да бъде преместен в група:",
+        "description": "If none of the regular expressions match the tab, move it to the group:"
+    },
+    "dontMove": {
+        "message": "Без преместване",
+        "description": "Don't move"
+    },
+    "groupArchivedTitle": {
+        "message": "$groupName$ (архивна)",
+        "description": "My group (archived)",
+        "placeholders": {
+            "groupName": {
+                "content": "$1",
+                "example": "My group"
+            }
+        }
     }
 }

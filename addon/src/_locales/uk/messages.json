@@ -278,8 +278,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Тут ви можете управляти гарячими клавішами для плагіна.<br>Обмеження:<br>1. Ці гарячі клавіші будуть працювати тільки на веб сторінках (http:, https:). На захищених сторінках браузера (about: addons наприклад) вони працювати не будуть. Це обмеження WebExtensions API. <br>2. Можливо деякі гарячі клавіші можуть не працювати на різних розкладках клавіатури. Наприклад у вас є гаряча клавіша <code>Ctrl + Е</ code> створена на англійській розкладці клавіатури, але в українській розкладці вона працювати не буде, тому що клавіша Е в ній має інший код. Для вирішення цієї проблеми досить створити таку ж гарячу клавішу з тією ж дією, тільки вже в українській розкладці - <code>Ctrl + Е</code>.",
-        "description": "Hotkeys description"
+        "message": "Ви також можете налаштувати гарячі клавіші на сторінці <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\"> Управління гарячими клавішами в розширеннях Firefox </a>. Вони будуть працювати на всіх вікнах і сторінках браузера.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "Додати гарячу клавішу",
@@ -290,8 +290,8 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Натисніть клавішу тут",
-        "description": "Press key here"
+        "message": "Введіть гарячу клавішу",
+        "description": "Type a shortcut"
     },
     "selectAction": {
         "message": "Виберіть дію",
@@ -300,6 +300,10 @@
     "selectGroup": {
         "message": "Виберіть групу",
         "description": "Select group"
+    },
+    "unknownGroup": {
+        "message": "Невідома група",
+        "description": "Unknown group"
     },
     "hotkeyActionTitleLoadNextGroup": {
         "message": "Завантажити наступну групу",
@@ -414,10 +418,10 @@
         "description": "Icon style"
     },
     "discardTabsAfterHide": {
-        "message": "Вивантажувати вкладки з пам'яті після зміни групи (дозволяє заощадити ОЗУ)",
-        "description": "Discard tabs after hide (this will save the RAM)"
+        "message": "Вивантажувати вкладки з пам'яті після закриття групи",
+        "description": "Unload tabs from memory after closing a group"
     },
-    "discardAfterHideExcludeAudioTabs": {
+    "discardExcludeAudioTabs": {
         "message": "Залишати вкладки зі звуком",
         "description": "Exclude tabs with sound"
     },
@@ -456,10 +460,6 @@
     "ffFailedAndLostDataMessage": {
         "message": "Firefox завершив свою роботу з помилкою і всі групи були загублені.\nЯкщо у Вас є резервна копія, Ви можете відновити дані з неї",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
-    },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "Стиль значка для нової групи",
-        "description": "Icon style for a new group"
     },
     "openGroupInNewWindow": {
         "message": "Відкрити групу в новому вікні",
@@ -615,7 +615,7 @@
         "message": "Створювати нову групу при відкритті нового вікна",
         "description": "Create a new group when opening a new window"
     },
-    "prependGroupTitleToWindowTitle": {
+    "prependTitleToWindow": {
         "message": "Додати заголовок групи до заголовку вікна",
         "description": "Prepend group title to window title"
     },
@@ -661,10 +661,6 @@
         "message": "У вас немає доступу до закладок. Включіть його в налаштуваннях доповнення",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
-    "exportGroupToMainBookmarkFolder": {
-        "message": "Експорт груп в \"STG bookmarks\" теку закладок",
-        "description": "Export groups to \"STG bookmarks\" bookmark folder"
-    },
     "exportGroupToBookmarks": {
         "message": "Експорт групи в закладки",
         "description": "Export group to bookmarks"
@@ -687,10 +683,6 @@
         "message": "В цій групі нема вкладок",
         "description": "This group has no tabs"
     },
-    "autoBackupGroupsToBookmarks": {
-        "message": "Автоматичний експорт всіх груп в закладки",
-        "description": "Auto backup all groups to bookmarks"
-    },
     "exportAllGroupsToBookmarks": {
         "message": "Експорт всіх груп в закладки",
         "description": "Export all groups to bookmarks"
@@ -702,10 +694,6 @@
     "discardTabTitle": {
         "message": "Вивантажити вкладку з пам'яті",
         "description": "Discard tab"
-    },
-    "autoBackupGroupsToFile": {
-        "message": "Автоматичний експорт всіх груп в файл (в теці завантажень)",
-        "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
         "message": "Ім'я теки",
@@ -722,10 +710,6 @@
     "showOtherTabs": {
         "message": "Показати інші вкладки",
         "description": "Show other tabs"
-    },
-    "dontDiscardTabsAfterHideThisGroup": {
-        "message": "Не вивантажувати з пам'яті вкладки групи після її закриття",
-        "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
         "message": "Показати повідомлення після видалення групи",
@@ -837,9 +821,13 @@
         "message": "Будь ласка, включіть опцію \"Відкрити попередні вікна та вкладки\" в налаштуваннях браузера. <br>Це необхідно для підтримки зв'язку між групою і вкладкою, інакше вкладки з минулій сесії не будуть відкриватися при завантаженні браузера і будуть втрачені із доповнення - аддон перестане правильно працювати.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
+    "exportToBookmarksWhenAutoBackup": {
+        "message": "Зберегти групу в закладках під час автоматичного резервного копіювання",
+        "description": "Save the group to bookmarks when auto backup"
+    },
     "leaveBookmarksOfClosedTabs": {
-        "message": "Залишити закладки закритих вкладок (закладки буде розділяти роздільник)",
-        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+        "message": "Залишити закладки закритих вкладок",
+        "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "Включити налагодження (DEBUG)",
@@ -1007,28 +995,6 @@
         "message": "Пошук або стрілку вправо для переходу до активної вкладки/групи",
         "description": "Search or right arrow to focus on active tab/group"
     },
-    "thisGroupIsMain": {
-        "message": "Ця група помічена як основна",
-        "description": "This group is marked as main"
-    },
-    "setGroupAsMain": {
-        "message": "Сробити цю групу основною",
-        "description": "Set this group as main"
-    },
-    "thisGroupWasMain": {
-        "message": "Примітка\nЦя група була позначена як основна",
-        "description": "Notice\nThis group was marked as the main"
-    },
-    "moveToMainIfNotInCatchTabRules": {
-        "message": "Переміщувати вкладки з цієї групи в групу \"$grouptitle$\", якщо жодне з правил регулярних виразів не спрацювало",
-        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
-        "placeholders": {
-            "grouptitle": {
-                "content": "$1",
-                "example": "My main group"
-            }
-        }
-    },
     "noContainerTitle": {
         "message": "Без контейнера",
         "description": "No container"
@@ -1068,10 +1034,6 @@
                 "example": "Facebook Container"
             }
         }
-    },
-    "hotkeysDescription2": {
-        "message": "Ви також можете налаштувати гарячі клавіші на сторінці <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\"> Управління гарячими клавішами в розширеннях Firefox </a>. Вони будуть працювати на всіх вікнах і сторінках браузера.",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "Вимкнути звук вкладки",
@@ -1173,6 +1135,22 @@
         "message": "Щоб уникнути втрати вкладок або їх розташування у вікнах і групах, настійно рекомендуємо вимкнути або видалити увімкнені розширення, які конфліктують з додатком Simple Tab Groups. Ви можете зробити це на сторінці налаштувань додатків \"about:addons\" або натиснувши комбінацію клавіш <code>Ctrl+Shift+A</code>",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
+    "ignoreConflictedExtIgnore": {
+        "message": "Ігнорувати це розширення",
+        "description": "Ignore conflicted extension"
+    },
+    "ignoreConflictedExtDontIgnore": {
+        "message": "Не ігнорувати це розширення",
+        "description": "Don't ignore this extension"
+    },
+    "ignoreConflictedExtIgnoredText": {
+        "message": "ігнорується",
+        "description": "Extension is ignored"
+    },
+    "ignoreConflictedExtConfirm": {
+        "message": "Це розширення втручається в роботу STG, що може призвести до втрати вкладок.\nІгнорувати його?",
+        "description": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?"
+    },
     "theme": {
         "message": "Тема",
         "description": "Select theme"
@@ -1216,5 +1194,31 @@
     "helpPageStgDebugAutoDebugMainTitle": {
         "message": "Сталася помилка в аддоні",
         "description": "An error occurred in the addon"
+    },
+    "windowNotHaveGroup": {
+        "message": "Це вікно немає завантаженої групи",
+        "description": "This window does not have a loaded group"
+    },
+    "defaultGroup": {
+        "message": "Група за замовчуванням",
+        "description": "Default group"
+    },
+    "moveToGroupIfNoneCatchTabRules": {
+        "message": "Якщо жоден із регулярних виразів не відповідає вкладці, перемістити її в групу:",
+        "description": "If none of the regular expressions match the tab, move it to the group:"
+    },
+    "dontMove": {
+        "message": "Не переміщати",
+        "description": "Don't move"
+    },
+    "groupArchivedTitle": {
+        "message": "$groupName$ (архівна)",
+        "description": "My group (archived)",
+        "placeholders": {
+            "groupName": {
+                "content": "$1",
+                "example": "My group"
+            }
+        }
     }
 }

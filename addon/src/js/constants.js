@@ -4,11 +4,14 @@ export const STG_BASE_URL = browser.runtime.getURL('');
 
 export const IS_BACKGROUND_PAGE = self.location.href.startsWith(MANIFEST.background.page);
 
+export const IS_MAC = (navigator.userAgentData?.platform || navigator.platform || '').toLowerCase().includes('mac');
+
 export const ACTIVE_SYMBOL = '〇';
 export const DISCARDED_SYMBOL = '✱';
 export const STICKY_SYMBOL = '📌';
 
 export const TEMPORARY_CONTAINER = 'temporary-container';
+export const TEMPORARY_CONTAINER_ICON = 'chill';
 export const DEFAULT_COOKIE_STORE_ID = 'firefox-default';
 
 export const CONTEXT_MENU_PREFIX_UNDO_REMOVE_GROUP = 'stg-undo-remove-group-id-';
@@ -42,6 +45,8 @@ export const GROUP_ICON_VIEW_TYPES = Object.freeze([
     'old-tab-groups',
     'title',
 ]);
+
+export const DEFAULT_GROUP_ICON_VIEW_TYPE = GROUP_ICON_VIEW_TYPES[0];
 
 export const DEFAULT_BOOKMARKS_PARENTS = Object.freeze([
     'toolbar_____',
@@ -109,6 +114,7 @@ export const CONFLICTED_EXTENSIONS = Object.freeze([
     'power-tabs@rapptz-addons.com', // https://addons.mozilla.org/firefox/addon/power-tabs/
     '{644e8eb0-c710-47e9-b81c-5dd69bfcf86b}', // https://addons.mozilla.org/firefox/addon/tabs-aside/
     'sync-tab-groups@eric.masseran', // Sync Tab Groups
+    'Tab-Session-Manager@sienori', // https://addons.mozilla.org/firefox/addon/tab-session-manager/
 ]);
 
 export const EXTENSIONS_WHITE_LIST = Object.freeze({
@@ -161,6 +167,8 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
             'group-unloaded',
             'group-updated',
             'group-removed',
+            'get-backup',
+            'set-backup',
         ],
         getActions: [
             'get-groups-list',
@@ -172,6 +180,7 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
         postActions: [
             'i-am-back',
             'group-loaded',
+            'group-unloaded',
             'group-updated',
             'group-removed',
         ],
@@ -255,18 +264,19 @@ export const EXTENSIONS_WHITE_LIST = Object.freeze({
 });
 
 export const DEFAULT_OPTIONS = Object.freeze({
-    version: '1.0',
+    version: MANIFEST.version,
     groups: [],
     lastCreatedGroupPosition: 0,
 
     // options
-    discardTabsAfterHide: false,
-    discardAfterHideExcludeAudioTabs: false,
+
+    /* changed group keys with the exception: id, tabs */
+    defaultGroupProps: {},
+
     closePopupAfterChangeGroup: true,
     closePopupAfterSelectTab: false,
     openGroupAfterChange: false,
     alwaysAskNewGroupName: true,
-    prependGroupTitleToWindowTitle: false,
     createNewGroupWhenOpenNewWindow: false,
     openManageGroupsInTab: true,
     showConfirmDialogBeforeGroupArchiving: true,
@@ -274,9 +284,7 @@ export const DEFAULT_OPTIONS = Object.freeze({
     showNotificationAfterGroupDelete: true,
     showContextMenuOnTabs: true,
     showContextMenuOnLinks: true,
-    exportGroupToMainBookmarkFolder: true,
     defaultBookmarksParent: DEFAULT_BOOKMARKS_PARENTS[0],
-    leaveBookmarksOfClosedTabs: false,
     showExtendGroupsPopupWithActiveTabs: false,
     showTabsWithThumbnailsInManageGroups: false,
     fullPopupWidth: false,
@@ -304,17 +312,12 @@ export const DEFAULT_OPTIONS = Object.freeze({
         'reload-all-tabs',
     ],
 
-    defaultGroupIconViewType: GROUP_ICON_VIEW_TYPES[0],
-    defaultGroupIconColor: '',
-
     autoBackupEnable: true,
     autoBackupLastBackupTimeStamp: 1,
     autoBackupIntervalKey: AUTO_BACKUP_INTERVAL_KEY.days, // minutes, hours, days
     autoBackupIntervalValue: 1,
     autoBackupIncludeTabThumbnails: true,
     autoBackupIncludeTabFavIcons: true,
-    autoBackupGroupsToBookmarks: true,
-    autoBackupGroupsToFile: true,
     autoBackupFolderName: '',
     autoBackupByDayIndex: true,
 
@@ -322,22 +325,11 @@ export const DEFAULT_OPTIONS = Object.freeze({
 
     hotkeys: [
         {
-            ctrlKey: true,
-            shiftKey: false,
-            altKey: false,
-            metaKey: false,
-            key: '`',
-            keyCode: 192, // TODO
+            value: `${IS_MAC ? 'Mac' : ''}Ctrl+Backquote`,
             action: 'load-next-group',
             groupId: 0,
-        },
-        {
-            ctrlKey: true,
-            shiftKey: true,
-            altKey: false,
-            metaKey: false,
-            key: '`',
-            keyCode: 192,
+        }, {
+            value: `${IS_MAC ? 'Mac' : ''}Ctrl+Shift+Backquote`,
             action: 'load-prev-group',
             groupId: 0,
         },

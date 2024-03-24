@@ -1,6 +1,6 @@
 {
     "extensionDescription": {
-        "message": "Erzeuge, verändere und wechsle schnell Tab-Gruppen.",
+        "message": "Erzeuge, bearbeite und wechsle schnell zwischen Tab-Gruppen.",
         "description": "Description of the extension."
     },
     "openSettings": {
@@ -57,6 +57,10 @@
         "message": "Abbrechen",
         "description": "Cancel"
     },
+    "close": {
+        "message": "Schließen",
+        "description": "Close"
+    },
     "searchPlaceholder": {
         "message": "Tab suchen",
         "description": "Search placeholder"
@@ -76,12 +80,16 @@
         "description": "Grid display"
     },
     "manageGroupViewFreeArrange": {
-        "message": "Freie Anordnung (in zukünftigen Versionen)",
+        "message": "Freie Anordnung (verfügbar in zukünftigen Versionen)",
         "description": "Free arrange"
     },
     "closePopupAfterChangeGroup": {
-        "message": "Schließe Pop-Up nach Wechsel der Gruppe",
+        "message": "Schließe Popup nach Wechsel der Gruppe",
         "description": "Close popup after changing group"
+    },
+    "closePopupAfterSelectTab": {
+        "message": "Popup Fenster nach Tabauswahl schließen",
+        "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
         "message": "Öffne \"Gruppen verwalten\" in einem neuem Tab",
@@ -242,7 +250,7 @@
         "description": "Load icon"
     },
     "selectUserGroupIconWarnText": {
-        "message": "Entschuldigung, du kannst in diesem Pop-Up kein benutzerdefiniertes Symbol wählen. Stattdessen kannst du ein benutzerdefiniertes Gruppensymbol in \"Gruppen verwalten\" wählen.\n\"Gruppen verwalten\" öffnen?",
+        "message": "Entschuldigung, du kannst in diesem Popup kein benutzerdefiniertes Symbol wählen. Stattdessen kannst du ein benutzerdefiniertes Gruppensymbol in \"Gruppen verwalten\" wählen.\n\"Gruppen verwalten\" öffnen?",
         "description": "Sorry, you can't load custom icon in this popup, but you can load custom group icon in \"Manage groups\".\nOpen \"Manage groups\"?"
     },
     "setRandomColor": {
@@ -270,8 +278,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Hier kannst du Hotkeys hinzufügen.<br>Beschränkungen:<br>1. Diese Hotkeys funktionieren nur auf regulären Webseiten (<code>http://</code>, <code>https://</code>). Auf den Browserseiten (<code>about:</code>) funktionieren sie nicht (die WebExtensions-API verhindert das).<br>2. Einige Hotkeys funktionieren nicht mit allen Tastatur-Layouts. Wird zum Beispiel der Shortcut <code>Ctrl + ~</code> mit englischem Layout erstellt, funktioniert er nicht im russischen Layout, da im russischen Layout diese Taste mit einem anderen Code belegt ist. Um dies zu beheben, erzeuge einen neuen Hotkey im russischen Layout: <code>Ctrl + Ё</code>.",
-        "description": "Hotkeys description"
+        "message": "Du kannst außerdem Tastenkürzel auf der Seite <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Manage extension shortcuts in Firefox</a> einrichten. Sie funktionieren auf allen Seiten und Fenstern.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "Hotkey hinzufügen",
@@ -282,8 +290,8 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Taste drücken",
-        "description": "Press key here"
+        "message": "Tastenkombination drücken",
+        "description": "Type a shortcut"
     },
     "selectAction": {
         "message": "Wähle Aktion",
@@ -405,11 +413,7 @@
         "message": "Symbolstil",
         "description": "Icon style"
     },
-    "discardTabsAfterHide": {
-        "message": "Verwerfe Tabs nach dem Verstecken (reduziert die Arbeitsspeichernutzung)",
-        "description": "Discard tabs after hide (this will save the RAM)"
-    },
-    "discardAfterHideExcludeAudioTabs": {
+    "discardExcludeAudioTabs": {
         "message": "Tabs mit Ton ausschließen",
         "description": "Exclude tabs with sound"
     },
@@ -442,16 +446,12 @@
         "description": "Update thumbnail for this tab"
     },
     "notFoundWindowsAddonStoppedWorking": {
-        "message": "Fehler: Es wurden keine normalen nicht privaten/Inkognito/Pop-Up-Fenster gefunden.\nAdd-On funktioniert nicht mehr - bitte den Browser neu starten.",
+        "message": "Fehler: Es wurden keine normalen nicht privaten/Inkognito/Popup-Fenster gefunden.\nAdd-On funktioniert nicht mehr - bitte den Browser neu starten.",
         "description": "Error: not found any normal not private/incognito/popup windows.\nAddon stopped working. Please, restart browser."
     },
     "ffFailedAndLostDataMessage": {
         "message": "Firefox hatte einen Fehler und alle Gruppen sind verloren gegangen.\nFalls du ein Backup hast, kannst du die Daten daraus wiederherstellen.",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
-    },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "Symbolstil für eine neue Gruppe",
-        "description": "Icon style for a new group"
     },
     "openGroupInNewWindow": {
         "message": "Öffne Gruppe in neuem Fenster",
@@ -464,6 +464,14 @@
     "showTabAfterMovingItIntoThisGroup": {
         "message": "Zeige Tab, nachdem er automatisch in diese Gruppe verschoben wurde",
         "description": "Show the tab after auto-moving it into this group"
+    },
+    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+        "message": "Nur wenn der aktive Tab bewegt wurde",
+        "description": "Only if the active tab has been moved"
+    },
+    "showNotificationAfterMovingTabIntoThisGroup": {
+        "message": "Zeige eine Benachrichtigung, wenn Tabs in diese Gruppe bewegt werden",
+        "description": "Show a notification when tabs are moved to this group"
     },
     "tabMoving": {
         "message": "Tab verschieben",
@@ -599,7 +607,7 @@
         "message": "Erstelle eine neue Gruppe, wenn ein neues Fenster geöffnet wird",
         "description": "Create a new group when opening a new window"
     },
-    "prependGroupTitleToWindowTitle": {
+    "prependTitleToWindow": {
         "message": "Gruppentitel vor den Fenstertitel setzen",
         "description": "Prepend group title to window title"
     },
@@ -645,10 +653,6 @@
         "message": "Du hast keinen Zugriff auf die Lesezeichen. Bitte den Zugriff in den Add-On-Einstellungen gewähren.",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
-    "exportGroupToMainBookmarkFolder": {
-        "message": "Exportiere Gruppen in den Lesezeichen-Ordner \"STG bookmarks\"",
-        "description": "Export groups to \"STG bookmarks\" bookmark folder"
-    },
     "exportGroupToBookmarks": {
         "message": "Exportiere Gruppen in Lesezeichen",
         "description": "Export group to bookmarks"
@@ -671,10 +675,6 @@
         "message": "Diese Gruppe hat keine Tabs",
         "description": "This group has no tabs"
     },
-    "autoBackupGroupsToBookmarks": {
-        "message": "Automatische Sicherung aller Gruppen als Lesezeichen",
-        "description": "Auto backup all groups to bookmarks"
-    },
     "exportAllGroupsToBookmarks": {
         "message": "Alle Gruppen als Lesezeichen exportieren",
         "description": "Export all groups to bookmarks"
@@ -686,10 +686,6 @@
     "discardTabTitle": {
         "message": "Tab verwerfen",
         "description": "Discard tab"
-    },
-    "autoBackupGroupsToFile": {
-        "message": "Alle Gruppen automatisch als Datei sichern (im Ordner Downloads)",
-        "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
         "message": "Ordnername",
@@ -707,10 +703,6 @@
         "message": "Andere Tabs anzeigen",
         "description": "Show other tabs"
     },
-    "dontDiscardTabsAfterHideThisGroup": {
-        "message": "Tabs in dieser Gruppe nicht verwerfen, nachdem sie ausgeblendet wurden",
-        "description": "Don't discard tabs into this group after hide"
-    },
     "showNotificationAfterGroupDelete": {
         "message": "Benachrichtigung anzeigen, nachdem Gruppe gelöscht wurde",
         "description": "Show notification after group delete"
@@ -724,7 +716,7 @@
         "description": "This tab is not supported"
     },
     "showExtendGroupsPopupWithActiveTabs": {
-        "message": "Zeige aktive Tabs in Gruppen-Pop-Up",
+        "message": "Zeige aktive Tabs in Gruppen-Popup",
         "description": "Show active tabs in groups popup"
     },
     "reloadAllTabsInGroup": {
@@ -822,12 +814,16 @@
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
     "leaveBookmarksOfClosedTabs": {
-        "message": "Erzeuge Lesezeichen wenn Tabs geschlossen werden (Lesezeichen werden den Platzlasser teilen)",
-        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+        "message": "Erzeuge Lesezeichen wenn Tabs geschlossen werden",
+        "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "Aktiviere die Fehlerprotokollierung (DEBUG)",
         "description": "Enable DEBUG"
+    },
+    "disableDebugTitle": {
+        "message": "DEBUG deaktivieren",
+        "description": "Disable DEBUG"
     },
     "loggingIsEnabledTitle": {
         "message": "Die Fehlerprotokollierung ist aktiviert",
@@ -900,7 +896,7 @@
         }
     },
     "openPopupTitle": {
-        "message": "Pop-Up öffnen",
+        "message": "Popup öffnen",
         "description": "Open popup"
     },
     "openSidebarTitle": {
@@ -980,34 +976,12 @@
         "description": "Unload the group"
     },
     "tabsInThisWindowWereHidden": {
-        "message": "Die Tabs in diesem Fenster wurden ausgeblendet. Du findest sie am unteren Rand des Pop-Up-Fensters des Add-On.",
+        "message": "Die Tabs in diesem Fenster wurden ausgeblendet. Du findest sie am unteren Rand des Popup-Fensters des Add-On.",
         "description": "Tabs in this window were hidden. You can find them at the bottom of the popup window of the addon."
     },
     "searchOrGoToActive": {
         "message": "Suche oder nutze den > Rechtspfeil um die aktive Gruppe zu fokussieren",
         "description": "Search or right arrow to focus on active tab/group"
-    },
-    "thisGroupIsMain": {
-        "message": "Die Gruppe ist als Hauptgruppe markiert",
-        "description": "This group is marked as main"
-    },
-    "setGroupAsMain": {
-        "message": "Gruppe zur Hauptgruppe machen",
-        "description": "Set this group as main"
-    },
-    "thisGroupWasMain": {
-        "message": "Hinweis\nDiese Gruppe wurde als Hauptgruppe markiert.",
-        "description": "Notice\nThis group was marked as the main"
-    },
-    "moveToMainIfNotInCatchTabRules": {
-        "message": "Verschiebe die Tabs von dieser Gruppe in die Gruppe \"$grouptitle$\", wenn keine der angewandten regulären Ausdrücke zutrifft.",
-        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
-        "placeholders": {
-            "grouptitle": {
-                "content": "$1",
-                "example": "My main group"
-            }
-        }
     },
     "noContainerTitle": {
         "message": "Kein Container",
@@ -1049,10 +1023,6 @@
             }
         }
     },
-    "hotkeysDescription2": {
-        "message": "Du kannst außerdem Tastenkürzel auf der Seite <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Manage extension shortcuts in Firefox</a> einrichten. Sie funktionieren auf allen Seiten und Fenstern.",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
-    },
     "muteTab": {
         "message": "Tab stummschalten",
         "description": "Mute tab"
@@ -1070,7 +1040,7 @@
         "description": "Unmute group"
     },
     "fullPopupWidth": {
-        "message": "Nutze die volle Breite des Pop-Up",
+        "message": "Nutze die volle Breite des Popup",
         "description": "Use full popup width"
     },
     "showArchivedGroups": {
@@ -1180,5 +1150,21 @@
     "group": {
         "message": "Gruppe",
         "description": "Group"
+    },
+    "helpPageUnsupportedUrlTitle": {
+        "message": "Nicht unterstützte URL",
+        "description": "Unsupported URL"
+    },
+    "copyURL": {
+        "message": "URL kopieren",
+        "description": "Copy URL"
+    },
+    "helpPageStgDebugAutoDebugMainTitle": {
+        "message": "Im Addon ist ein Fehler unterlaufen",
+        "description": "An error occurred in the addon"
+    },
+    "windowNotHaveGroup": {
+        "message": "Dieses Fenster hat keine geladenen Gruppe",
+        "description": "This window does not have a loaded group"
     }
 }

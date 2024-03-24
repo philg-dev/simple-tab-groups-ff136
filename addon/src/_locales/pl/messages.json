@@ -57,6 +57,10 @@
         "message": "Anuluj",
         "description": "Cancel"
     },
+    "close": {
+        "message": "Zamknij",
+        "description": "Close"
+    },
     "searchPlaceholder": {
         "message": "Wyszukaj zakładkę...",
         "description": "Search placeholder"
@@ -82,6 +86,10 @@
     "closePopupAfterChangeGroup": {
         "message": "Zamknij okno pop-up po zmianie grupy",
         "description": "Close popup after changing group"
+    },
+    "closePopupAfterSelectTab": {
+        "message": "Zamknij okienko po wybraniu zakładki",
+        "description": "Close the popup window after selecting a tab"
     },
     "openManageGroupsInTab": {
         "message": "Otwórz \"Menadżer grup\" w nowej karcie",
@@ -270,8 +278,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Tutaj możesz dodać skróty klawiszowe.<br>Ograniczenia:<br>1. Skróty te działają tylko na stronach internetowych (http:, https:). Na stronach przeglądarki np. (about:) - to nie działa, interfejs WebExtensions API na to nie zezwala.<br>2. Niektóre skróty klawiszowe nie działają w różnych układach klawiatury. Na przykład skrót utworzony w angielskim układzie <code>Ctrl + ~</code> nie będzie działał na rosyjskim układzie, ponieważ w rosyjskim układzie ten klucz ma inny kod. Aby to naprawić, po prostu utwórz kolejny skrót w rosyjskim układzie: <code>Ctrl + Ё</code>",
-        "description": "Hotkeys description"
+        "message": "Możesz również skonfigurować skróty klawiszowe na stronie <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Zarządzanie skrótami klawiaturowymi w Firefox</a>. Będą one działać we wszystkich oknach i stronach przeglądarki.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "Dodaj skrót",
@@ -282,8 +290,8 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "W tym polu wciśnij klawisze skrótów",
-        "description": "Press key here"
+        "message": "Wprowadź skrót",
+        "description": "Type a shortcut"
     },
     "selectAction": {
         "message": "Wybierz akcję",
@@ -308,6 +316,14 @@
     "hotkeyActionTitleLoadPrevUnloadedGroup": {
         "message": "Wczytaj poprzednią ukrytą grupę",
         "description": "Load previous unloaded group"
+    },
+    "hotkeyActionTitleLoadNextNonEmptyGroup": {
+        "message": "Wczytaj następną niepustą grupę",
+        "description": "Load next non-empty group"
+    },
+    "hotkeyActionTitleLoadPrevNonEmptyGroup": {
+        "message": "Wczytaj poprzednią niepustą grupę",
+        "description": "Load previous non-empty group"
     },
     "hotkeyActionTitleLoadHistoryNextGroup": {
         "message": "Wczytaj następną grupę z historii",
@@ -397,9 +413,9 @@
         "message": "Styl ikony",
         "description": "Icon style"
     },
-    "discardTabsAfterHide": {
-        "message": "Zamknij karty po ich ukryciu (to zmniejszy użycie pamięci RAM)",
-        "description": "Discard tabs after hide (this will save the RAM)"
+    "discardExcludeAudioTabs": {
+        "message": "Wyklucz zakładki odtwarzające dźwięki",
+        "description": "Exclude tabs with sound"
     },
     "notPossibleSwitchGroupBecauseSomeTabShareMicrophoneOrCamera": {
         "message": "Nie można zmienić grupy, ponieważ jedna z otwartych kart współdzieli mikrofon lub kamerę",
@@ -437,10 +453,6 @@
         "message": "Firefox uległ awarii i wszystkie grupy zostały utracone.\nJeśli masz kopię zapasową, możesz przywrócić z niej dane",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
     },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "Styl ikon dla nowej grupy",
-        "description": "Icon style for a new group"
-    },
     "openGroupInNewWindow": {
         "message": "Otwórz grupę w nowym oknie",
         "description": "Open group in new window"
@@ -452,6 +464,14 @@
     "showTabAfterMovingItIntoThisGroup": {
         "message": "Pokaż kartę po auto-przeniesieniu jej do nowej grupy",
         "description": "Show the tab after auto-moving it into this group"
+    },
+    "showOnlyActiveTabAfterMovingItIntoThisGroup": {
+        "message": "Tylko gdy aktywna zakładka została przesunięta",
+        "description": "Only if the active tab has been moved"
+    },
+    "showNotificationAfterMovingTabIntoThisGroup": {
+        "message": "Pokazuj powiadomienia gdy zakłady zostały przeniesione do tej grupy",
+        "description": "Show a notification when tabs are moved to this group"
     },
     "tabMoving": {
         "message": "Przenoszenie kart",
@@ -535,6 +555,10 @@
         "message": "Utwórz kopię co:",
         "description": "Create backup every:"
     },
+    "autoBackupIntervalKeyMinutes": {
+        "message": "minutę(y)",
+        "description": "minute(s)"
+    },
     "autoBackupIntervalKeyHours": {
         "message": "godzin(ę)",
         "description": "hour(s)"
@@ -583,7 +607,7 @@
         "message": "Utwórz nową grupę podczas otwierania nowego okna",
         "description": "Create a new group when opening a new window"
     },
-    "prependGroupTitleToWindowTitle": {
+    "prependTitleToWindow": {
         "message": "Pokaż nazwę grupy jako prefiks w tytule okna",
         "description": "Prepend group title to window title"
     },
@@ -629,10 +653,6 @@
         "message": "Nie masz dostępu do zakładek. Włącz je w ustawieniach dodatku.",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
-    "exportGroupToMainBookmarkFolder": {
-        "message": "Wyeksportuj grupę do folderu zakładek \"STG bookmarks\"",
-        "description": "Export groups to \"STG bookmarks\" bookmark folder"
-    },
     "exportGroupToBookmarks": {
         "message": "Eksportuj grupę do zakładek",
         "description": "Export group to bookmarks"
@@ -655,10 +675,6 @@
         "message": "Ta grupa nie zawiera żadnych kart",
         "description": "This group has no tabs"
     },
-    "autoBackupGroupsToBookmarks": {
-        "message": "Automatyczna kopia zapasowa wszystkich grup",
-        "description": "Auto backup all groups to bookmarks"
-    },
     "exportAllGroupsToBookmarks": {
         "message": "Eksportuj wszystkie grupy do zakładek",
         "description": "Export all groups to bookmarks"
@@ -670,10 +686,6 @@
     "discardTabTitle": {
         "message": "Porzuć kartę",
         "description": "Discard tab"
-    },
-    "autoBackupGroupsToFile": {
-        "message": "Automatyczna kopia zapasowa wszystkich grup do pliku (w folderze pobierania)",
-        "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
         "message": "Nazwa folderu",
@@ -690,10 +702,6 @@
     "showOtherTabs": {
         "message": "Pokaż inne karty",
         "description": "Show other tabs"
-    },
-    "dontDiscardTabsAfterHideThisGroup": {
-        "message": "Nie rozdzielaj kart między grupy po ukryciu",
-        "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
         "message": "Pokaż powiadomienie po usunięciu grupy",
@@ -806,12 +814,16 @@
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
     "leaveBookmarksOfClosedTabs": {
-        "message": "Pozostaw zakładki zamkniętych kart (zakładki będą rozdzielone separatorem)",
-        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+        "message": "Pozostaw zakładki zamkniętych kart",
+        "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "Włącz tryb DEBUG",
         "description": "Enable DEBUG"
+    },
+    "disableDebugTitle": {
+        "message": "Wyłącz tryb DEBUG",
+        "description": "Disable DEBUG"
     },
     "loggingIsEnabledTitle": {
         "message": "zapisywanie zdarzeń w dzienniku jest włączone",
@@ -923,6 +935,10 @@
             }
         }
     },
+    "helpPageOpenInContainerDesc2": {
+        "message": "Kolejny dodatek:",
+        "description": "Another addon:"
+    },
     "helpPageOpenInContainerDesc3": {
         "message": "próbuje otworzyć ten adres w kontekście <container-name>$containerName$</container-name>. Przenieś kartę do innej grupy albo zabroń rozszerzeniu <strong>$addonName$</strong> wykonania tej akcji.",
         "description": "tries to open this URL in Business container. Move the tab to another group or forbid the addon 'Facebook Container' to perform this action.",
@@ -967,31 +983,13 @@
         "message": "Wyszukaj i użyj strzałek aby wybrać i uaktywnić kartę/grupę",
         "description": "Search or right arrow to focus on active tab/group"
     },
-    "thisGroupIsMain": {
-        "message": "Ta grupa jest oznaczona jako główna",
-        "description": "This group is marked as main"
-    },
-    "setGroupAsMain": {
-        "message": "Ustaw tę grupę jako główną",
-        "description": "Set this group as main"
-    },
-    "thisGroupWasMain": {
-        "message": "Informacja\nTa grupa została oznaczona jako główna",
-        "description": "Notice\nThis group was marked as the main"
-    },
-    "moveToMainIfNotInCatchTabRules": {
-        "message": "Przenieś karty z tej grupy do grupy \"$grouptitle$\" jeśli nie pasują do żadnego z wyrażeń regularnych",
-        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
-        "placeholders": {
-            "grouptitle": {
-                "content": "$1",
-                "example": "My main group"
-            }
-        }
-    },
     "noContainerTitle": {
         "message": "Brak kontekstu",
         "description": "No container"
+    },
+    "reopenTabsWithTemporaryContainersInNew": {
+        "message": "Otwórz ponownie zakładki z tymczasowymi kontekstami w nowym",
+        "description": "Reopen tabs with temporary containers in new"
     },
     "temporaryContainerTitleDescription": {
         "message": "Prefiks tytułu tymczasowego kontekstu",
@@ -1015,9 +1013,15 @@
             }
         }
     },
-    "hotkeysDescription2": {
-        "message": "Możesz również skonfigurować skróty klawiszowe na stronie <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Zarządzanie skrótami klawiaturowymi w Firefox</a>. Będą one działać we wszystkich oknach i stronach przeglądarki.",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
+    "helpPageOpenInContainerIgnoreAppForSession": {
+        "message": "Ignoruj rozszerzenie \"<strong>$addonName$</strong>\" dopóki przeglądarka nie zostanie zamknieta",
+        "description": "Ignore addon for session",
+        "placeholders": {
+            "addonName": {
+                "content": "$1",
+                "example": "Facebook Container"
+            }
+        }
     },
     "muteTab": {
         "message": "Wycisz kartę",
@@ -1082,5 +1086,89 @@
     "eraseAndImportAddonBackupButton": {
         "message": "Wyczyść lub przywróć kopię zapasową",
         "description": "Erase and restore backup"
+    },
+    "searchOnlyGroups": {
+        "message": "Tylko grupy",
+        "description": "Only groups"
+    },
+    "autoBackupByDayIndexTitle": {
+        "message": "Oznaczenie kopii = dzień miesiąca",
+        "description": "Backup number as day of month"
+    },
+    "autoBackupByDayIndexDescription": {
+        "message": "To ułatwia pozbycie się dużej ilości kopii zapasowych z folderu. Plik z kopią ma nazwę w stylu: \"auto-stg-backup-day-of-month-22@drive4ik.json\"",
+        "description": "Backup by day description"
+    },
+    "clickHereForInfo": {
+        "message": "Naciśnij tu aby uzyskać więcej informacji",
+        "description": "Click here for more info"
+    },
+    "enabled": {
+        "message": "Włączone",
+        "description": "Enabled text"
+    },
+    "disabled": {
+        "message": "Wyłączone",
+        "description": "Disabled text"
+    },
+    "helpPageExtensionsThatConflictWithStgTitle": {
+        "message": "Rozszerzenie jest w konflikcie z STG",
+        "description": "Extensions that conflict with STG"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc1": {
+        "message": "Dodatek Simple Tab Groups jest w konflikcie z następującymi aktywnymi rozszerzeniami:",
+        "description": "Simple Tab Groups addon conflicts with the following enabled extensions:"
+    },
+    "helpPageExtensionsThatConflictWithStgDesc2": {
+        "message": "Aby uniknąć ryzyka utraty zakładek lub ich lokalizacji w grupach zaleca się wyłączenie lub usunięcie rozszerzeń, które są w konflikcie z dodatkiem Simple Tab Groups <code>Ctrl+Shift+A</code>",
+        "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
+    },
+    "theme": {
+        "message": "Motyw",
+        "description": "Select theme"
+    },
+    "themeAuto": {
+        "message": "Automatyczny - ustawienia systemu",
+        "description": "Auto theme"
+    },
+    "themeLight": {
+        "message": "Jasny",
+        "description": "Light theme"
+    },
+    "themeDark": {
+        "message": "Ciemny",
+        "description": "Dark theme"
+    },
+    "contextMenuEditor": {
+        "message": "Menu kontekstowe",
+        "description": "Context menu editor"
+    },
+    "tab": {
+        "message": "Zakładka",
+        "description": "Tab"
+    },
+    "group": {
+        "message": "Grupa",
+        "description": "Group"
+    },
+    "helpPageUnsupportedUrlTitle": {
+        "message": "Niewspierany URL",
+        "description": "Unsupported URL"
+    },
+    "copyURL": {
+        "message": "Kopiuj URL",
+        "description": "Copy URL"
+    },
+    "helpPageStgDebugTitle": {
+        "message": "STG - strona debugowania",
+        "description": "STG debug page"
+    },
+    "helpPageStgDebugAutoDebugMainTitle": {
+        "message": "Błąd wystąpił w dodatku",
+        "description": "An error occurred in the addon"
+    },
+    "windowNotHaveGroup": {
+        "message": "Okno nie zawiera załadowanej grupy",
+        "description": "This window does not have a loaded group"
     }
 }

@@ -1,5 +1,4 @@
 
-import backgroundSelf from './background.js';
 import * as Constants from './constants.js';
 import * as Tabs from './tabs.js';
 import * as Windows from './windows.js';
@@ -23,7 +22,7 @@ export async function openUrl(page, asWindow = false) {
         active: true,
         cookieStoreId: Constants.DEFAULT_COOKIE_STORE_ID,
     }).catch(() => {});
-};
+}
 
 export function openOptionsPage() {
     return browser.runtime.openOptionsPage()
@@ -39,6 +38,8 @@ function loadPopupWindows() {
 }
 
 export async function openManageGroups() {
+    const {default: backgroundSelf} = await import('./background.js');
+
     if (backgroundSelf.options.openManageGroupsInTab) {
         await Tabs.createUrlOnce(MANAGE_TABS_URL);
     } else {
@@ -66,4 +67,8 @@ export async function openDebugPage() {
     } else {
         await Windows.createPopup(debugPageUrl);
     }
+}
+
+export function openNotSupportedUrlHelper() {
+    Tabs.createUrlOnce('https://developer.mozilla.org/docs/Mozilla/Add-ons/WebExtensions/Content_scripts');
 }

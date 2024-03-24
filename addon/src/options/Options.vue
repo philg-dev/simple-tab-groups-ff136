@@ -3,20 +3,22 @@
 
     import Vue from 'vue';
 
-    import popup from '../js/popup.vue';
-    import swatches from 'vue-swatches';
+    import popup from '../components/popup.vue';
+    import editGroup from '../components/edit-group.vue';
     import manageAddonBackup from './manage-addon-backup';
-    import 'vue-swatches/dist/vue-swatches.css';
 
-    import * as Constants from 'constants';
-    import Messages from 'messages';
-    import Logger from 'logger';
-    import * as Utils from 'utils';
-    import * as Storage from 'storage';
-    import * as File from 'file';
-    import * as Urls from 'urls';
-    import * as Groups from 'groups';
-    import JSON from 'json';
+    import * as Constants from '/js/constants.js';
+    import Messages from '/js/messages.js';
+    import Logger from '/js/logger.js';
+    import * as Utils from '/js/utils.js';
+    import * as Storage from '/js/storage.js';
+    import * as File from '/js/file.js';
+    import * as Urls from '/js/urls.js';
+    import * as Groups from '/js/groups.js';
+    import {isValidHotkeyEvent, isValidHotkeyValue, eventToHotkeyValue} from '/js/hotkeys.js';
+    import JSON from '/js/json.js';
+
+    import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
 
     window.logger = new Logger('Options');
 
@@ -25,25 +27,25 @@
     const SECTION_GENERAL = 'general',
         SECTION_HOTKEYS = 'hotkeys',
         SECTION_BACKUP = 'backup',
-        funcKeys = [...Array(12).keys()].map(n => KeyEvent[`DOM_VK_F${n + 1}`]),
         folderNameRegExp = /[\<\>\:\"\/\\\|\?\*\x00-\x1F]|^(?:aux|con|nul|prn|com\d|lpt\d)$|^\.+|\.+$/gi;
 
     document.title = browser.i18n.getMessage('openSettings');
 
     export default {
+        name: 'options-page',
+        mixins: [defaultGroupMixin],
         data() {
+            this.HOTKEY_ACTIONS = Constants.HOTKEY_ACTIONS;
+            this.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP = Constants.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP;
+            this.GROUP_ICON_VIEW_TYPES = Constants.GROUP_ICON_VIEW_TYPES;
+            this.AUTO_BACKUP_INTERVAL_KEY = Constants.AUTO_BACKUP_INTERVAL_KEY;
+
+            this.SECTION_GENERAL = SECTION_GENERAL;
+            this.SECTION_HOTKEYS = SECTION_HOTKEYS;
+            this.SECTION_BACKUP = SECTION_BACKUP;
+
             return {
-                SECTION_GENERAL,
-                SECTION_HOTKEYS,
-                SECTION_BACKUP,
-
                 section: window.localStorage.optionsSection || SECTION_GENERAL,
-
-                HOTKEY_ACTIONS: Constants.HOTKEY_ACTIONS,
-                HOTKEY_ACTIONS_WITH_CUSTOM_GROUP: Constants.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP,
-
-                GROUP_ICON_VIEW_TYPES: Constants.GROUP_ICON_VIEW_TYPES,
-                AUTO_BACKUP_INTERVAL_KEY: Constants.AUTO_BACKUP_INTERVAL_KEY,
 
                 contextMenuTabTitles: {
                     'open-in-new-window': {
@@ -126,7 +128,6 @@
 
                 options: {},
                 groups: [],
-                isMac: false,
 
                 manageAddonSettings: null,
                 manageAddonSettingsTitle: '',
@@ -146,18 +147,13 @@
         },
         components: {
             popup: popup,
-            swatches: swatches,
+            'edit-group': editGroup,
             'manage-addon-backup': manageAddonBackup,
         },
         async created() {
-            let {os} = await browser.runtime.getPlatformInfo();
-            this.isMac = os === browser.runtime.PlatformOs.MAC;
+            const data = await Storage.get();
 
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.updateTheme());
-
-            let data = await Storage.get();
-
-            let options = Utils.assignKeys({}, data, Constants.ALL_OPTIONS_KEYS);
+            const options = Utils.assignKeys({}, data, Constants.ALL_OPTIONS_KEYS);
 
             options.autoBackupFolderName = await File.getAutoBackupFolderName();
 
@@ -166,13 +162,13 @@
             this.groups = data.groups; // set before for watch hotkeys
             this.options = options;
 
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.updateTheme());
+
             this.loadBookmarksParents();
 
             [
                 ...Constants.ONLY_BOOL_OPTION_KEYS,
                 'defaultBookmarksParent',
-                'defaultGroupIconViewType',
-                'defaultGroupIconColor',
                 'autoBackupIntervalKey',
                 'theme',
                 'contextMenuTab',
@@ -211,24 +207,6 @@
                     autoBackupFolderName: value,
                 });
             },
-            'options.autoBackupGroupsToFile': function(value, oldValue) {
-                if (null == oldValue) {
-                    return;
-                }
-
-                if (!value && !this.options.autoBackupGroupsToBookmarks) {
-                    this.options.autoBackupGroupsToBookmarks = true;
-                }
-            },
-            'options.autoBackupGroupsToBookmarks': function(value, oldValue) {
-                if (null == oldValue) {
-                    return;
-                }
-
-                if (!value && !this.options.autoBackupGroupsToFile) {
-                    this.options.autoBackupGroupsToFile = true;
-                }
-            },
             'options.autoBackupIntervalValue': function(value, oldValue) {
                 if (!value || null == oldValue) {
                     return;
@@ -259,41 +237,15 @@
             },
             'options.hotkeys': {
                 handler(hotkeys, oldValue) {
-                    if (!hotkeys) {
-                        return;
-                    }
-
-                    let beforeLength = hotkeys.length,
-                        hasChange = false;
-
                     hotkeys = hotkeys.filter((hotkey, index, self) => {
-                        if (!hotkey.action) {
-                            return false;
-                        }
-
-                        if (!hotkey.keyCode && !hotkey.key) {
-                            return false;
-                        }
-
-                        if (!(hotkey.ctrlKey || hotkey.shiftKey || hotkey.altKey || hotkey.metaKey || funcKeys.includes(hotkey.keyCode))) {
-                            return false;
-                        }
-
-                        if (Constants.HOTKEY_ACTIONS_WITH_CUSTOM_GROUP.includes(hotkey.action) && hotkey.groupId && !this.groups.some(gr => gr.id === hotkey.groupId)) {
-                            hotkey.groupId = 0;
-                            hasChange = true;
-                        }
-
-                        return self.findIndex(h => Object.keys(hotkey).every(key => hotkey[key] === h[key])) === index;
+                        return self.findIndex(h => h.value === hotkey.value) === index;
                     });
 
-                    if (!oldValue && hotkeys.length === beforeLength && !hasChange) {
-                        return;
+                    const hotheysIsValid = hotkeys.every(hotkey => hotkey.action && isValidHotkeyValue(hotkey.value));
+
+                    if (hotheysIsValid && oldValue) {
+                        Messages.sendMessageModule('BG.saveOptions', {hotkeys});
                     }
-
-                    Messages.sendMessageModule('BG.saveOptions', {
-                        hotkeys: hotkeys,
-                    });
                 },
                 deep: true,
             },
@@ -308,16 +260,11 @@
             },
         },
         computed: {
-            isDisabledAutoBackupGroupsToFile() {
-                if (!this.permissions.bookmarks) {
-                    this.options.autoBackupGroupsToFile = true;
-                    return true;
-                }
-
-                return false;
-            },
             showEnableDarkThemeNotification() {
                 return Utils.getThemeApply(this.options.theme) === 'dark';
+            },
+            groupIds() {
+                return this.groups.map(group => group.id);
             },
         },
         methods: {
@@ -329,19 +276,38 @@
             },
 
             openBackupFolder: File.openBackupFolder,
+            getGroupTitle: Groups.getTitle,
+
+            hasEqualHotkeys(hotkey) {
+                return this.options.hotkeys.filter(h => h.value && h.value === hotkey.value).length > 1;
+            },
+
+            getHotkeyParentNode(event) {
+                return event.target.closest('.control');
+            },
+
+            onBlurHotkey(event) {
+                const inputParent = this.getHotkeyParentNode(event);
+
+                inputParent.classList.remove('key-success');
+            },
 
             saveHotkeyKeyCodeAndStopEvent(hotkey, event, withKeyCode) {
                 event.preventDefault();
                 event.stopPropagation();
                 event.stopImmediatePropagation();
 
-                if (!event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey) {
-                    hotkey.key = event.key.length === 1 ? event.key.toUpperCase() : event.key;
+                const inputParent = this.getHotkeyParentNode(event);
 
-                    if (withKeyCode) {
-                        hotkey.keyCode = event.keyCode;
-                    }
+                if (isValidHotkeyEvent(event)) {
+                    inputParent.classList.add('key-success');
+                    inputParent.classList.remove('key-error');
+                } else {
+                    inputParent.classList.add('key-error');
+                    inputParent.classList.remove('key-success');
                 }
+
+                hotkey.value = eventToHotkeyValue(event);
             },
 
             setManageAddonSettings(data, popupTitle, disableEmptyGroups = false, allowClearAddonDataBeforeRestore = false) {
@@ -366,9 +332,9 @@
             },
 
             exportAddonSettings() {
-                Messages.sendMessage('create-backup',{
-                    includeTabFavIconsIntoBackup: this.includeTabFavIconsIntoBackup,
-                    includeTabThumbnailsIntoBackup: this.includeTabThumbnailsIntoBackup,
+                Messages.sendMessage('create-backup', {
+                    includeTabFavIcons: this.includeTabFavIconsIntoBackup,
+                    includeTabThumbnails: this.includeTabThumbnailsIntoBackup,
                 });
             },
 
@@ -382,7 +348,7 @@
                     return;
                 }
 
-                if ('object' !== Utils.type(data) || !Array.isArray(data.groups) || !Number.isInteger(data.lastCreatedGroupPosition)) {
+                if ('object' !== Utils.type(data) || !Array.isArray(data.groups) || !Number.isSafeInteger(data.lastCreatedGroupPosition)) {
                     Utils.notify('This is wrong backup!');
                     return;
                 }
@@ -616,21 +582,9 @@
                 Messages.sendMessageModule('BG.clearAddon');
             },
 
-            getIconTypeUrl(iconType) {
-                return Groups.getIconUrl({
-                    iconViewType: iconType,
-                    iconColor: this.options.defaultGroupIconColor || 'rgb(66, 134, 244)',
-                });
-            },
-
             createHotkey() {
                 return {
-                    ctrlKey: false,
-                    shiftKey: false,
-                    altKey: false,
-                    metaKey: false,
-                    key: '',
-                    keyCode: 0,
+                    value: '',
                     action: '',
                     groupId: 0,
                 };
@@ -658,7 +612,8 @@
                 }
             },
 
-            getGroupIconUrl(group) {
+            getGroupIconUrl(groupId) {
+                const group = this.groups.find(gr => gr.id === groupId);
                 return Groups.getIconUrl(group);
             },
 
@@ -720,20 +675,6 @@
                     </div>
                 </div>
             </div>
-            <div class="field h-margin-left-10">
-                <label class="checkbox" :disabled="!permissions.bookmarks">
-                    <input v-if="permissions.bookmarks" v-model="options.exportGroupToMainBookmarkFolder" type="checkbox" />
-                    <input v-else disabled="" type="checkbox" />
-                    <span v-text="lang('exportGroupToMainBookmarkFolder')"></span>
-                </label>
-            </div>
-            <div class="field h-margin-left-10">
-                <label class="checkbox" :disabled="!permissions.bookmarks">
-                    <input v-if="permissions.bookmarks" v-model="options.leaveBookmarksOfClosedTabs" type="checkbox" />
-                    <input v-else disabled="" type="checkbox" />
-                    <span v-text="lang('leaveBookmarksOfClosedTabs')"></span>
-                </label>
-            </div>
             <div class="field">
                 <label class="checkbox">
                     <input v-model="options.showContextMenuOnTabs" type="checkbox" />
@@ -790,25 +731,6 @@
             </div>
             <div class="field">
                 <label class="checkbox">
-                    <input v-model="options.prependGroupTitleToWindowTitle" type="checkbox" />
-                    <span v-text="lang('prependGroupTitleToWindowTitle')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
-                    <input v-model="options.discardTabsAfterHide" type="checkbox" />
-                    <span v-text="lang('discardTabsAfterHide')"></span>
-                </label>
-            </div>
-            <div class="field h-margin-left-10">
-                <label class="checkbox" :disabled="!options.discardTabsAfterHide">
-                    <input v-if="options.discardTabsAfterHide" v-model="options.discardAfterHideExcludeAudioTabs" type="checkbox" />
-                    <input v-else disabled="" type="checkbox" />
-                    <span v-text="lang('discardAfterHideExcludeAudioTabs')"></span>
-                </label>
-            </div>
-            <div class="field">
-                <label class="checkbox">
                     <input v-model="options.openManageGroupsInTab" type="checkbox" />
                     <span v-text="lang('openManageGroupsInTab')"></span>
                 </label>
@@ -838,6 +760,14 @@
                 </label>
             </div>
             <div class="field">
+                <button class="button is-success" @click="openDefaultGroup">
+                    <span class="icon">
+                        <img class="size-16" src="/icons/icon.svg" />
+                    </span>
+                    <span class="h-margin-left-5" v-text="lang('defaultGroup')"></span>
+                </button>
+            </div>
+            <div class="field">
                 <label class="label" v-text="lang('temporaryContainerTitleDescription')"></label>
                 <div class="control">
                     <input v-model.lazy.trim="options.temporaryContainerTitle" class="input tmp-container-input" type="text" :placeholder="lang('temporaryContainerTitle')">
@@ -858,29 +788,6 @@
             </div>
 
             <div v-if="showEnableDarkThemeNotification" class="field mb-6" v-html="lang('enableDarkThemeNotification')"></div>
-
-            <div class="field">
-                <label class="label" v-text="lang('enterDefaultGroupIconViewTypeTitle')"></label>
-                <div class="field is-grouped">
-                    <div class="control">
-                        <swatches v-model.trim="options.defaultGroupIconColor" :title="lang('iconColor')" swatches="text-advanced" popover-x="right" show-fallback :trigger-style="{
-                            width: '36px',
-                            height: '27px',
-                            borderRadius: '4px',
-                        }" />
-                    </div>
-                    <div v-for="iconViewType in GROUP_ICON_VIEW_TYPES" :key="iconViewType" class="control">
-                        <button
-                            @click="options.defaultGroupIconViewType = iconViewType"
-                            :class="['button', {'is-focused': options.defaultGroupIconViewType === iconViewType}]"
-                            >
-                            <figure class="image is-16x16 is-inline-block">
-                                <img :src="getIconTypeUrl(iconViewType)" />
-                            </figure>
-                        </button>
-                    </div>
-                </div>
-            </div>
 
             <hr/>
 
@@ -928,34 +835,15 @@
         <div v-show="section === SECTION_HOTKEYS">
             <label class="has-text-weight-bold" v-text="lang('hotkeysTitle')"></label>
             <div class="h-margin-bottom-10" v-html="lang('hotkeysDescription')"></div>
-            <div class="h-margin-bottom-10" v-html="lang('hotkeysDescription2')"></div>
             <div class="hotkeys">
                 <div v-for="(hotkey, hotkeyIndex) in options.hotkeys" :key="hotkeyIndex" class="field">
-                    <div class="is-flex is-align-items-center">
-                        <label class="checkbox">
-                            <input v-model="hotkey.ctrlKey" type="checkbox" />
-                            <span v-if="isMac">Control</span>
-                            <span v-else>Ctrl</span>
-                        </label>
-                        <label class="checkbox">
-                            <input v-model="hotkey.shiftKey" type="checkbox" />
-                            <span>Shift</span>
-                        </label>
-                        <label class="checkbox">
-                            <input v-model="hotkey.altKey" type="checkbox" />
-                            <span v-if="isMac">Option</span>
-                            <span v-else>Alt</span>
-                        </label>
-                        <label v-if="isMac" class="checkbox">
-                            <input v-model="hotkey.metaKey" type="checkbox" />
-                            <span>Command</span>
-                        </label>
+                    <div class="is-flex is-align-items-center" :class="hasEqualHotkeys(hotkey) && 'key-error'">
                         <div class="control input-command">
-                            <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(hotkey, $event, true)" :value="hotkey.key" autocomplete="off" class="input" :placeholder="lang('hotkeyPlaceholder')" tabindex="-1" />
+                            <input type="text" @keydown="saveHotkeyKeyCodeAndStopEvent(hotkey, $event)" @blur="onBlurHotkey" :value="hotkey.value" autocomplete="off" class="input" :placeholder="lang('hotkeyPlaceholder')" tabindex="-1" />
                         </div>
                         <div class="select">
                             <select v-model="hotkey.action">
-                                <option v-if="!hotkey.action" selected disabled value="" v-text="lang('selectAction')"></option>
+                                <option v-if="!hotkey.action" disabled value="" v-text="lang('selectAction')"></option>
                                 <option v-for="action in HOTKEY_ACTIONS" :key="action" :value="action" v-text="getHotkeyActionTitle(action)"></option>
                             </select>
                         </div>
@@ -967,15 +855,16 @@
                     </div>
 
                     <div v-if="HOTKEY_ACTIONS_WITH_CUSTOM_GROUP.includes(hotkey.action)" class="is-flex is-align-items-center custom-group">
-                        <div :class="['control', {'has-icons-left': groups.some(gr => gr.id === hotkey.groupId)}]">
+                        <div :class="['control', {'has-icons-left': hotkey.groupId}]">
                             <div class="select">
                                 <select v-model.number="hotkey.groupId">
                                     <option :value="0" v-text="lang('selectGroup')"></option>
-                                    <option v-for="group in groups" :key="group.id" :value="group.id" v-text="group.title"></option>
+                                    <option v-if="hotkey.groupId && !groupIds.includes(hotkey.groupId)" disabled :value="hotkey.groupId" v-text="lang('unknownGroup')"></option>
+                                    <option v-for="group in groups" :key="group.id" :value="group.id" v-text="getGroupTitle(group)"></option>
                                 </select>
                             </div>
-                            <span class="icon is-left" v-if="groups.some(gr => gr.id === hotkey.groupId)">
-                                <img class="size-16" :src="getGroupIconUrl(groups.find(gr => gr.id === hotkey.groupId))">
+                            <span class="icon is-left" v-if="hotkey.groupId">
+                                <img class="size-16" :src="getGroupIconUrl(hotkey.groupId)">
                             </span>
                         </div>
                     </div>
@@ -1077,30 +966,17 @@
 
                     <!-- files -->
                     <div class="field">
-                        <label class="checkbox" :disabled="isDisabledAutoBackupGroupsToFile">
-                            <input v-model="options.autoBackupGroupsToFile" :disabled="isDisabledAutoBackupGroupsToFile" type="checkbox" />
-                            <span v-text="lang('autoBackupGroupsToFile')"></span>
-                        </label>
                         <div class="field is-grouped is-align-items-center">
                             <div class="control">
                                 <label class="field" v-text="lang('folderNameTitle') + ':'"></label>
                             </div>
                             <div class="control">
-                                <input type="text" v-model.trim="options.autoBackupFolderName" :disabled="!options.autoBackupGroupsToFile" maxlength="200" class="input" />
+                                <input type="text" v-model.trim="options.autoBackupFolderName" maxlength="200" class="input" />
                             </div>
                             <div class="control">
                                 <button class="button" @click="openBackupFolder" v-text="lang('openBackupFolder')"></button>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- bookmarks -->
-                    <div class="field">
-                        <label class="checkbox" :disabled="!permissions.bookmarks">
-                            <input v-if="permissions.bookmarks" v-model="options.autoBackupGroupsToBookmarks" type="checkbox" />
-                            <input v-else disabled="" type="checkbox" />
-                            <span v-text="lang('autoBackupGroupsToBookmarks')"></span>
-                        </label>
                     </div>
                 </div>
             </div>
@@ -1179,7 +1055,7 @@
                     <div class="control">
                         <button @click="showClearAddonConfirmPopup = true" class="button is-danger">
                             <span class="icon">
-                                <img class="size-16" src="/icons/close.svg" style="fill: #ffffff" />
+                                <img class="size-16" src="/icons/close.svg" />
                             </span>
                             <span class="h-margin-left-5" v-text="lang('clear')"></span>
                         </button>
@@ -1188,6 +1064,30 @@
             </div>
 
         </div>
+
+        <popup
+            v-if="openEditDefaultGroup"
+            :title="lang('defaultGroup')"
+            :buttons="
+                [{
+                    event: 'save-group',
+                    classList: 'is-success',
+                    lang: 'save',
+                }, {
+                    event: 'close-popup',
+                    lang: 'cancel',
+                }]
+            "
+            @save-group="() => $refs.editDefaultGroup.triggerChanges()"
+            @close-popup="openEditDefaultGroup = false"
+            >
+            <edit-group
+                ref="editDefaultGroup"
+                :group-to-edit="defaultGroup"
+                :is-default-group="true"
+                :group-to-compare="defaultCleanGroup"
+                @changes="saveDefaultGroup"></edit-group>
+        </popup>
 
         <popup v-if="showLoadingMessage" :buttons="
                 [{
@@ -1231,6 +1131,7 @@
                     event: 'save',
                     lang: 'eraseAndImportAddonBackupButton',
                     classList: 'is-danger',
+                    disabled: false,
                 }, {
                     event: 'close-popup',
                     lang: 'cancel',
@@ -1241,6 +1142,7 @@
                 :disable-empty-groups="manageAddonSettingsDisableEmptyGroups"
                 :allow-clear-addon-data="manageAddonSettingsAllowClearAddonDataBeforeRestore"
                 ref="manageAddonBackup"
+                @enable-get-data="value => $refs.mng.buttonsClone[0].disabled = !value"
                 @clear-addon-data-update="value =>
                     Object.assign($refs.mng.buttonsClone[0], value ?
                         {lang: 'eraseAndImportAddonBackupButton', classList: 'is-danger'} :
@@ -1256,7 +1158,12 @@
     body {
         // background-color: #f9f9fa;
         transition: background-color ease .2s;
-        font-size: 14px;
+    }
+
+    .button.is-info,
+    .button.is-danger,
+    .button.is-success {
+        --fill-color: #fff;
     }
 
     #stg-options {
@@ -1271,6 +1178,25 @@
 
         .tmp-container-input {
             width: 300px;
+        }
+
+        .hotkeys {
+            .control .input {
+                width: 15em;
+                ime-mode: disabled;
+            }
+            .control:not(.key-success):not(.key-error) .input:focus {
+                --in-content-border-focus: transparent;
+                outline: 2px solid dodgerblue;
+            }
+            :not(.key-error) > .control.key-success .input:focus {
+                --in-content-border-focus: transparent;
+                outline: 2px solid limegreen;
+            }
+            .key-error .input {
+                --in-content-border-focus: transparent;
+                outline: 2px solid orangered;
+            }
         }
 
         .hotkeys > .field {

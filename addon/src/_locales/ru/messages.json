@@ -278,8 +278,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Здесь вы можете управлять горячими клавишами для плагина.<br>Ограничения:<br>1. Эти горячие клавиши будут работать только на веб страницах (http:, https:). На защищенных страницах браузера (about:addons например) они работать не будут. Это ограничение WebExtensions API.<br>2. Возможно некоторые горячие клавиши могут не работать на разных раскладках клавиатуры. Например у вас есть горячая клавиша <code>Ctrl + ~</code> создана на английской раскладке клавиатуры, но на русской раскладке она работать не будет, потому что клавиша Ё там имеет другой код. Для решения этой проблемы достаточно создать такую же горячую клавишу с тем же действием, только уже на русской раскладке - <code>Ctrl + Ё</code>.",
-        "description": "Hotkeys description"
+        "message": "Вы также можете настроить горячие клавиши на странице <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Управление горячими клавишами в расширениях Firefox</a>. Они будут работать на всех окнах и страницах браузера.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "Добавить горячую клавишу",
@@ -290,8 +290,8 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Нажимать здесь",
-        "description": "Press key here"
+        "message": "Введите горячую клавишу",
+        "description": "Type a shortcut"
     },
     "selectAction": {
         "message": "Выберите действие",
@@ -300,6 +300,10 @@
     "selectGroup": {
         "message": "Выберите группу",
         "description": "Select group"
+    },
+    "unknownGroup": {
+        "message": "Неизвестная группа",
+        "description": "Unknown group"
     },
     "hotkeyActionTitleLoadNextGroup": {
         "message": "Загрузить следующую группу",
@@ -414,10 +418,10 @@
         "description": "Icon style"
     },
     "discardTabsAfterHide": {
-        "message": "Выгружать вкладки из памяти после смены группы (позволяет сэкономить ОЗУ)",
-        "description": "Discard tabs after hide (this will save the RAM)"
+        "message": "Выгружать вкладки из памяти после закрытия группы",
+        "description": "Unload tabs from memory after closing a group"
     },
-    "discardAfterHideExcludeAudioTabs": {
+    "discardExcludeAudioTabs": {
         "message": "Исключить вкладки со звуком",
         "description": "Exclude tabs with sound"
     },
@@ -456,10 +460,6 @@
     "ffFailedAndLostDataMessage": {
         "message": "Firefox завершил свою работу с ошибкой и все группы были утеряны.\nЕсли у Вас имеется резервная копия, Вы можете восстановить данные из нее",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
-    },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "Стиль значка для новой группы",
-        "description": "Icon style for a new group"
     },
     "openGroupInNewWindow": {
         "message": "Открыть группу в новом окне",
@@ -615,7 +615,7 @@
         "message": "Создавать новую группу при открытии нового окна",
         "description": "Create a new group when opening a new window"
     },
-    "prependGroupTitleToWindowTitle": {
+    "prependTitleToWindow": {
         "message": "Добавить заголовок группы к заголовку окна",
         "description": "Prepend group title to window title"
     },
@@ -661,10 +661,6 @@
         "message": "У вас нет доступа к закладкам. Включить его в настройках аддона",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
-    "exportGroupToMainBookmarkFolder": {
-        "message": "Экспорт групп в \"STG bookmarks\" папку закладок",
-        "description": "Export groups to \"STG bookmarks\" bookmark folder"
-    },
     "exportGroupToBookmarks": {
         "message": "Экспорт группы в закладки",
         "description": "Export group to bookmarks"
@@ -687,10 +683,6 @@
         "message": "В этой группе нет вкладок",
         "description": "This group has no tabs"
     },
-    "autoBackupGroupsToBookmarks": {
-        "message": "Автоматический экспорт всех групп в закладки",
-        "description": "Auto backup all groups to bookmarks"
-    },
     "exportAllGroupsToBookmarks": {
         "message": "Экспорт всех групп в закладки",
         "description": "Export all groups to bookmarks"
@@ -702,10 +694,6 @@
     "discardTabTitle": {
         "message": "Выгрузить вкладку из памяти",
         "description": "Discard tab"
-    },
-    "autoBackupGroupsToFile": {
-        "message": "Автоматический экспорт всех групп в файл (в папке загрузок)",
-        "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
         "message": "Имя папки",
@@ -722,10 +710,6 @@
     "showOtherTabs": {
         "message": "Показать другие вкладки",
         "description": "Show other tabs"
-    },
-    "dontDiscardTabsAfterHideThisGroup": {
-        "message": "Не выгружать из памяти вкладки группы после её закрытия",
-        "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
         "message": "Показать уведомление после удаления группы",
@@ -837,9 +821,13 @@
         "message": "Пожалуйста, включите опцию \"Открыть предыдущие окна и вкладки\" в настройках браузера. <br>Это необходимо для поддержания связи между группой и вкладкой, иначе вкладки с прошлой сессии не будут открываться при запуске браузера и будут потеряны из дополнения - аддон перестанет правильно работать.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
+    "exportToBookmarksWhenAutoBackup": {
+        "message": "Сохранить группу в закладки при автоматическом резервном копировании",
+        "description": "Save the group to bookmarks when auto backup"
+    },
     "leaveBookmarksOfClosedTabs": {
-        "message": "Оставить закладки закрытых вкладок (закладки будет разделять разделитель)",
-        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+        "message": "Оставить закладки закрытых вкладок",
+        "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "Включить логирование (DEBUG)",
@@ -1007,28 +995,6 @@
         "message": "Поиск или стрелку вправо для перехода к активной вкладке/группе",
         "description": "Search or right arrow to focus on active tab/group"
     },
-    "thisGroupIsMain": {
-        "message": "Эта группа помечена как основная",
-        "description": "This group is marked as main"
-    },
-    "setGroupAsMain": {
-        "message": "Сделать эту группу основной",
-        "description": "Set this group as main"
-    },
-    "thisGroupWasMain": {
-        "message": "Примечание\nЭта группа была помечена как основная",
-        "description": "Notice\nThis group was marked as the main"
-    },
-    "moveToMainIfNotInCatchTabRules": {
-        "message": "Перемещать вкладки из этой группы в группу \"$grouptitle$\", если ни одно из правил регулярных выражений не соответствует",
-        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
-        "placeholders": {
-            "grouptitle": {
-                "content": "$1",
-                "example": "My main group"
-            }
-        }
-    },
     "noContainerTitle": {
         "message": "Без контейнера",
         "description": "No container"
@@ -1068,10 +1034,6 @@
                 "example": "Facebook Container"
             }
         }
-    },
-    "hotkeysDescription2": {
-        "message": "Вы также можете настроить горячие клавиши на странице <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Управление горячими клавишами в расширениях Firefox</a>. Они будут работать на всех окнах и страницах браузера.",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "Убрать звук вкладки",
@@ -1173,6 +1135,22 @@
         "message": "Во избежание потери вкладок или их расположения в окнах и группах, настоятельно рекомендуется выключить или удалить включенные расширения которые конфликтуют с аддоном Simple Tab Groups. Вы можете это сделать на странице настроек аддонов \"about:addons\" или нажав комбинацию клавиш <code>Ctrl+Shift+A</code>",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
+    "ignoreConflictedExtIgnore": {
+        "message": "Игнорировать это расширение",
+        "description": "Ignore conflicted extension"
+    },
+    "ignoreConflictedExtDontIgnore": {
+        "message": "Не игнорировать это расширение",
+        "description": "Don't ignore this extension"
+    },
+    "ignoreConflictedExtIgnoredText": {
+        "message": "игнорируется",
+        "description": "Extension is ignored"
+    },
+    "ignoreConflictedExtConfirm": {
+        "message": "Это расширение вмешивается в работу STG, что может привести к потере вкладок.\nИгнорировать его?",
+        "description": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?"
+    },
     "theme": {
         "message": "Тема",
         "description": "Select theme"
@@ -1216,5 +1194,31 @@
     "helpPageStgDebugAutoDebugMainTitle": {
         "message": "Произошла ошибка в аддоне",
         "description": "An error occurred in the addon"
+    },
+    "windowNotHaveGroup": {
+        "message": "Это окно не имеет загруженной группы",
+        "description": "This window does not have a loaded group"
+    },
+    "defaultGroup": {
+        "message": "Группа по умолчанию",
+        "description": "Default group"
+    },
+    "moveToGroupIfNoneCatchTabRules": {
+        "message": "Если ни одно из регулярных выражений не соответствует вкладке, переместить её в группу:",
+        "description": "If none of the regular expressions match the tab, move it to the group:"
+    },
+    "dontMove": {
+        "message": "Не перемещать",
+        "description": "Don't move"
+    },
+    "groupArchivedTitle": {
+        "message": "$groupName$ (архивная)",
+        "description": "My group (archived)",
+        "placeholders": {
+            "groupName": {
+                "content": "$1",
+                "example": "My group"
+            }
+        }
     }
 }

@@ -37,6 +37,10 @@
             }
         }
     },
+    "openOptions": {
+        "message": "Настройки",
+        "description": "Options"
+    },
     "importBackup": {
         "message": "Загрузить резервную копию заметок",
         "description": "Load notes backup"
@@ -44,5 +48,21 @@
     "exportBackup": {
         "message": "Сохранить резервную копию заметок",
         "description": "Save notes backup"
+    },
+    "tabFaviconAsGroup": {
+        "message": "Установить значок группы как значок вкладки заметок",
+        "description": "Set the group icon as the notes tab icon"
+    },
+    "editorLineNumbers": {
+        "message": "Номера строк",
+        "description": "Show line numbers"
+    },
+    "editorLineWrapping": {
+        "message": "Перенос строк",
+        "description": "Line wrapping"
+    },
+    "editorUseRTLDirection": {
+        "message": "Использовать направление RTL",
+        "description": "Use RTL direction"
     }
 }

@@ -1,14 +1,15 @@
 
-import * as Constants from './constants.js';
-import Logger from './logger.js';
+// import * as Constants from './constants.js';
+import {MENU_ITEM_BUTTON, MenusContextType, MenusItemType} from './browser-constants.js';
+import Logger, {catchFunc} from './logger.js';
 import * as Utils from './utils.js';
 
-const logger = new Logger('Menus');
+const logger = new Logger('Menus').disable();
 
 const menusMap = new Map;
 
-export function create(createProperties) {
-    const id = createProperties.id ??= String(Utils.getRandomInt(100000,  Number.MAX_SAFE_INTEGER));
+export async function create(createProperties) {
+    const id = createProperties.id ??= String(Utils.getRandomInt(100000));
 
     const log = logger.start('create', createProperties);
 
@@ -26,11 +27,11 @@ export function create(createProperties) {
         createProperties.icons = {16: icon};
     }
 
-    browser.menus.create(createProperties);
+    await browser.menus.create(createProperties);
 
     const menuListenerOptions = {
         id,
-        onClick: onClick ? Utils.catchFunc(onClick) : null,
+        onClick: onClick ? catchFunc(onClick) : null,
     };
 
     menuListenerOptions.onMenuClick = onMenuClick.bind(menuListenerOptions);
@@ -49,9 +50,9 @@ async function onMenuClick(info, tab) {
         info.button ??= 0;
 
         info.button = {
-            LEFT: info.button === 0,
-            MIDDLE: info.button === 1,
-            RIGHT: info.button === 2,
+            LEFT: info.button === MENU_ITEM_BUTTON.LEFT,
+            MIDDLE: info.button === MENU_ITEM_BUTTON.MIDDLE,
+            RIGHT: info.button === MENU_ITEM_BUTTON.RIGHT,
         };
 
         await this.onClick?.(info, tab);
@@ -60,7 +61,7 @@ async function onMenuClick(info, tab) {
     }
 }
 
-export function remove(id) {
+export async function remove(id) {
     const log = logger.start('remove', id);
 
     if (!menusMap.has(id)) {
@@ -68,53 +69,44 @@ export function remove(id) {
         return;
     }
 
+    await browser.menus.remove(id);
+
     browser.menus.onClicked.removeListener(menusMap.get(id).onMenuClick);
     menusMap.delete(id);
 
     return log.stop(id);
 }
 
-export function update(id, updateProperties) {
-    const log = logger.start('update', id, updateProperties);
+export async function update(id, updateProperties) {
+    // const log = logger.start('update', id, updateProperties);
 
     if (!menusMap.has(id)) {
-        log.throwError([id, 'doesn\'t exist']);
+        // log.throwError([id, 'doesn\'t exist']);
         return;
     }
 
-    browser.menus.update(id, updateProperties);
+    await browser.menus.update(id, updateProperties);
 
-    log.stop();
+    // log.stop();
 }
 
-export function enable(id) {
+export async function enable(id) {
     const log = logger.start('enable', id);
 
-    update(id, {
-        enabled: true,
-    });
+    await update(id, {enabled: true});
 
     log.stop();
 }
 
-export function disable(id) {
+export async function disable(id) {
     const log = logger.start('disable', id);
 
-    update(id, {
-        enabled: false,
-    });
+    await update(id, {enabled: false});
 
     log.stop();
 }
 
-export const ContextType = {
-    ...browser.menus.ContextType,
-    ACTION: Constants.MANIFEST.manifest_version === 3
-        ? browser.menus.ContextType.ACTION
-        : browser.menus.ContextType.BROWSER_ACTION,
-};
-export const ItemType = browser.menus.ItemType;
-
-// export const LEFT_BUTTON = 0;
-// export const MIDDLE_BUTTON = 1;
-// export const RIGHT_BUTTON = 2;
+export {
+    MenusContextType as ContextType,
+    MenusItemType as ItemType,
+}

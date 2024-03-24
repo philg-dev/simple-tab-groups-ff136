@@ -2,11 +2,31 @@
 import * as Constants from './constants.js';
 import Logger from './logger.js';
 import * as Urls from './urls.js';
+import JSON from './json.js';
 
 const logger = new Logger('Storage');
 
-export async function get(keys, errorCounter = 0) {
-    const log = logger.start('get', keys, {errorCounter});
+async function nativeLocalGet(keysData, log = logger, errorCounter = 0) {
+    try {
+        return await browser.storage.local.get(keysData);
+    } catch (e) {
+        errorCounter++;
+
+        if (errorCounter > 100) {
+            Urls.openUrl('db-error-reinstall', true);
+            log.throwError('db-error-reinstall', e);
+        }
+
+        log.error("can't read keys", {errorCounter});
+
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        return nativeLocalGet(keysData, log, errorCounter);
+    }
+}
+
+export async function get(keys) {
+    const log = logger.start('get', keys);
 
     let keysData;
     if (!keys) {
@@ -19,25 +39,25 @@ export async function get(keys, errorCounter = 0) {
         keysData = keys;
     }
 
-    let result = null;
-
-    try {
-        result = await browser.storage.local.get(keysData);
-    } catch (e) {
-        errorCounter++;
-
-        if (errorCounter > 100) {
-            Urls.openUrl('db-error-reinstall', true);
-            log.throwError('db-error-reinstall', e);
-        }
-
-        log.error("can't read keys");
-
-        await new Promise(resolve => setTimeout(resolve, 200));
-        return get(keys, errorCounter);
-    }
+    const result = await nativeLocalGet(keysData, log);
 
     log.stop();
+
+    return result;
+}
+
+export async function getForMigrate() {
+    const log = logger.start('getForMigrate');
+
+    const storageData = await nativeLocalGet(null, log);
+
+    const result = {
+        ...JSON.clone(Constants.DEFAULT_OPTIONS),
+        ...storageData,
+    };
+
+    log.stop();
+
     return result;
 }
 
@@ -48,7 +68,7 @@ export async function set(data) {
         data.groups.forEach(group => !group.isArchive && (group.tabs = []));
     }
 
-    let result = await browser.storage.local.set(data);
+    const result = await browser.storage.local.set(data);
 
     log.stop();
 
@@ -56,9 +76,11 @@ export async function set(data) {
 }
 
 export function remove(...args) {
+    logger.log('remove', args);
     return browser.storage.local.remove(...args);
 }
 
 export function clear(...args) {
+    logger.log('clear', args);
     return browser.storage.local.clear(...args);
 }

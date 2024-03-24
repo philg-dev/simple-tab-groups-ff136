@@ -3,6 +3,10 @@
 
     export default {
         props: {
+            title: {
+                type: String,
+                default: 'groupSettings',
+            },
             buttons: {
                 required: true,
                 type: Array,
@@ -20,7 +24,7 @@
             <div tabindex="0" class="back-button" @click="$emit('close-popup')" @keydown.enter="$emit('close-popup')" :title="lang('goBackButtonTitle')">
                 <img class="size-16" src="/icons/arrow-left.svg" />
             </div>
-            <div class="text" v-text="lang('groupSettings')"></div>
+            <div class="text" v-text="lang(title)"></div>
         </div>
 
         <hr>
@@ -56,8 +60,9 @@
 
         .body {
             flex-grow: 1;
-            padding: 0 var(--indent);
+            padding: 0 var(--indent) var(--indent);
             overflow-y: auto;
+            scrollbar-width: thin;
         }
 
         .action-buttons {

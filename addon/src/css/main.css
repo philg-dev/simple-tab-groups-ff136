@@ -42,7 +42,6 @@ body {
 
 img {
     pointer-events: none;
-    -moz-user-select: none;
     user-select: none;
     vertical-align: middle;
 }
@@ -108,7 +107,7 @@ img,
 }
 
 .indent-children > * + * {
-    margin-left: 6px;
+    margin-left: .5em;
 }
 
 hr {
@@ -119,7 +118,6 @@ hr {
 
 /*BULMA REWRITE*/
 .checkbox {
-    -moz-user-select: none;
     user-select: none;
     display: inline-flex;
     align-items: center;
@@ -198,6 +196,7 @@ hr {
     height: 16px;
     min-width: 16px;
     line-height: 1;
+    display: inline-block;
 }
 
 .size-18 {

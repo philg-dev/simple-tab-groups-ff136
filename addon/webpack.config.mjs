@@ -1,6 +1,4 @@
 import path from 'path';
-import fse from 'fs-extra';
-// import webpack from 'webpack';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { VueLoaderPlugin } from 'vue-loader';
@@ -12,24 +10,28 @@ function setPath(folderName) {
     return path.resolve(__dirname, folderName);
 }
 
-function copy(path) {
-    return {
-        from: path,
-        to: path,
-    };
+function copyPathObj(path) {
+    if (typeof path === 'string') {
+        return {
+            from: path,
+            to: path,
+        };
+    }
+
+    return path;
 }
 
-function multipleCopy(paths) {
-    return paths.map(copy);
-}
+const THIRD_PARTY_LIBRARIES = new Map([
+    ['vue', '/js/vue.runtime.esm.js'],
+]);
 
-const config = {
+export default {
     context: setPath('src'),
     entry: {
         'popup/popup': './popup/popup.js',
         'options/options': './options/options.js',
         'manage/manage': './manage/manage.js',
-        'web/hotkeys': './web/hotkeys.js',
+        'web/content-script': './web/content-script.js',
     },
     experiments: {
         outputModule: true,
@@ -41,25 +43,17 @@ const config = {
         module: true,
         chunkFormat: 'module',
     },
-    externals: {
-        vue: '/js/vue.runtime.esm.min.js',
-        background: '/js/background.js',
-        'wait-background': '/js/wait-background.js',
-        constants: '/js/constants.js',
-        messages: '/js/messages.js',
-        logger: '/js/logger.js',
-        containers: '/js/containers.js',
-        file: '/js/file.js',
-        urls: '/js/urls.js',
-        cache: '/js/cache.js',
-        groups: '/js/groups.js',
-        windows: '/js/windows.js',
-        management: '/js/management.js',
-        tabs: '/js/tabs.js',
-        utils: '/js/utils.js',
-        json: '/js/json.js',
-        storage: '/js/storage.js',
-    },
+    externals: [
+        function ({request}, callback) {
+            if (request.startsWith('/js/')) {
+                callback(null, request);
+            } else if (THIRD_PARTY_LIBRARIES.has(request)) {
+                callback(null, THIRD_PARTY_LIBRARIES.get(request));
+            } else {
+                callback();
+            }
+        },
+    ],
     externalsType: 'module',
     resolve: {
         extensions: ['.js', '.vue'],
@@ -75,6 +69,10 @@ const config = {
     devtool: false,
     optimization: {
         minimize: false,
+    },
+    performance: {
+        maxEntrypointSize: 1024000,
+        maxAssetSize: 1024000,
     },
     module: {
         rules: [
@@ -103,7 +101,7 @@ const config = {
         }),
 
         new CopyWebpackPlugin({
-            patterns: multipleCopy([
+            patterns: [
                 // folders
                 'icons',
                 'help',
@@ -111,28 +109,9 @@ const config = {
                 'css',
 
                 // js
+                'js',
                 'stg-background.js',
                 'stg-background.html',
-
-                'js/vue.runtime.esm.min.js',
-                'js/background.js',
-                'js/wait-background.js',
-                'js/logger.js',
-                'js/messages.js',
-                'js/constants.js',
-                'js/utils.js',
-                'js/json.js',
-                'js/menus.js',
-                'js/urls.js',
-                'js/containers.js',
-                'js/storage.js',
-                'js/cache.js',
-                'js/cache-storage.js',
-                'js/file.js',
-                'js/groups.js',
-                'js/tabs.js',
-                'js/windows.js',
-                'js/management.js',
 
                 // pages
                 'popup/popup.html',
@@ -141,21 +120,7 @@ const config = {
 
                 // manifest
                 'manifest.json',
-            ]),
+            ].map(copyPathObj),
         }),
     ],
-};
-
-export default function(env, options) {
-    let isProduction = options.mode === 'production';
-
-    if (isProduction) {
-        fse.removeSync(config.output.path);
-    }
-
-    // config.plugins.push(new webpack.DefinePlugin({
-    //     IS_PRODUCTION: isProduction,
-    // }));
-
-    return config;
-};
+}

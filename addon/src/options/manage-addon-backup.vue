@@ -1,10 +1,10 @@
 <script>
     'use strict';
 
-    import * as Constants from 'constants';
-    import * as Containers from 'containers';
-    import * as Groups from 'groups';
-    import JSON from 'json';
+    import * as Constants from '/js/constants.js';
+    import * as Containers from '/js/containers.js';
+    import * as Groups from '/js/groups.js';
+    import JSON from '/js/json.js';
 
     export default {
         props: {
@@ -25,6 +25,9 @@
             clearAddonData(value) {
                 this.$emit('clear-addon-data-update', value);
             },
+            enableGetData(value) {
+                this.$emit('enable-get-data', value);
+            },
             groups({length}) {
                 if (!length) {
                     this.checkAllGroups = false;
@@ -38,20 +41,44 @@
         },
         computed: {
             showPinnedTabs() {
-                return this.data.pinnedTabs && this.data.pinnedTabs.length > 0;
+                return this.data.pinnedTabs?.length > 0;
             },
             showGeneral() {
-                return Object.keys(this.data).some(key => key !== 'hotkeys' && Constants.ALL_OPTIONS_KEYS.includes(key));
+                return Object.keys(this.data).some(this.isGeneralOptionsKey, this);
             },
             showHotkeys() {
-                return this.data.hotkeys && this.data.hotkeys.length > 0;
+                return this.data.hotkeys?.length > 0;
+            },
+            readyPinnedTabs() {
+                return this.showPinnedTabs && this.includePinnedTabs;
+            },
+            getGeneral() {
+                return this.showGeneral && this.includeGeneral;
+            },
+            getHotkeys() {
+                return this.showHotkeys && this.includeHotkeys;
+            },
+            getGroups() {
+                return this.groups.length > 0;
+            },
+            enableGetData() {
+                return this.getGeneral || this.getHotkeys || this.getGroups;
             },
         },
         mounted() {
             this.$nextTick(() => this.$emit('clear-addon-data-update', this.allowClearAddonData));
         },
         data() {
-            let filteredGroups = this.disableEmptyGroups ? this.data.groups.filter(group => group.tabs.length) : this.data.groups;
+            let filteredGroups,
+                disabledGroups;
+
+            if (this.disableEmptyGroups) {
+                filteredGroups = this.data.groups.filter(group => group.tabs.length);
+                disabledGroups = this.data.groups.filter(group => !group.tabs.length);
+            } else {
+                filteredGroups = this.data.groups;
+                disabledGroups = [];
+            }
 
             return {
                 TEMPORARY_CONTAINER: Constants.TEMPORARY_CONTAINER,
@@ -60,7 +87,7 @@
 
                 filteredGroups,
 
-                clearAddonData: this.allowClearAddonData ? true : false,
+                clearAddonData: this.allowClearAddonData,
 
                 includePinnedTabs: true,
                 includeGeneral: true,
@@ -69,7 +96,7 @@
                 checkAllGroups: true,
 
                 groups: filteredGroups.slice(),
-                disabledGroups: this.disableEmptyGroups ? this.data.groups.filter(group => !group.tabs.length) : [],
+                disabledGroups,
             };
         },
         methods: {
@@ -77,32 +104,44 @@
 
             getGroupIconUrl: Groups.getIconUrl,
 
+            getGroupTitle: Groups.getTitle,
+
+            isGeneralOptionsKey(key) {
+                if (key === 'hotkeys') {
+                    return false;
+                }
+
+                return Constants.ALL_OPTIONS_KEYS.includes(key);
+            },
+
             getData() {
-                let result = {
-                    groups: this.groups,
-                };
+                const result = {};
 
-                if (this.data.containers) {
-                    result.containers = this.data.containers;
+                if (this.getGroups) {
+                    result.groups = this.groups;
+
+                    if (this.data.containers) {
+                        result.containers = this.data.containers;
+                    }
+
+                    if (this.data.lastCreatedGroupPosition) {
+                        result.lastCreatedGroupPosition = this.data.lastCreatedGroupPosition;
+                    }
+
+                    if (this.readyPinnedTabs) {
+                        result.pinnedTabs = this.data.pinnedTabs;
+                    }
                 }
 
-                if (Number.isInteger(this.data.lastCreatedGroupPosition)) {
-                    result.lastCreatedGroupPosition = this.data.lastCreatedGroupPosition;
-                }
-
-                if (this.showPinnedTabs && this.includePinnedTabs && this.data.pinnedTabs && this.data.pinnedTabs.length) {
-                    result.pinnedTabs = this.data.pinnedTabs;
-                }
-
-                if (this.showGeneral && this.includeGeneral) {
-                    for (let key in this.data) {
-                        if (key !== 'hotkeys' && Constants.ALL_OPTIONS_KEYS.includes(key)) {
+                if (this.getGeneral) {
+                    for (const key in this.data) {
+                        if (this.isGeneralOptionsKey(key)) {
                             result[key] = this.data[key];
                         }
                     }
                 }
 
-                if (this.showHotkeys && this.includeHotkeys) {
+                if (this.getHotkeys) {
                     result.hotkeys = this.data.hotkeys;
                 }
 
@@ -158,39 +197,44 @@
         </div>
 
         <div class="field">
-            <label class="label checkbox">
-                <input type="checkbox" v-model="checkAllGroups" />
-                <span v-text="lang('importGroups')"></span>
-            </label>
+            <div class="field">
+                <div class="control">
+                    <label class="label checkbox">
+                        <input type="checkbox" v-model="checkAllGroups" />
+                        <span v-text="lang('importGroups')"></span>
+                    </label>
+                </div>
+            </div>
 
-            <div class="control" v-for="group in data.groups" :key="group.id">
-                <label class="checkbox" :disabled="disabledGroups.includes(group)">
-                    <input type="checkbox" v-model="groups" :value="group" :disabled="disabledGroups.includes(group)" />
-                    <template v-if="group.iconUrl || group.iconColor">
-                        <figure class="image is-16x16 is-inline-block">
+            <div class="field" v-for="group in data.groups" :key="group.id">
+                <div class="control">
+                    <label class="checkbox indent-children" :disabled="disabledGroups.includes(group)">
+                        <input type="checkbox" v-model="groups" :value="group" :disabled="disabledGroups.includes(group)" />
+
+                        <figure v-if="group.iconUrl || group.iconColor" class="image is-16x16 is-inline-block">
                             <img :src="getGroupIconUrl(group)" />
                         </figure>
-                        &nbsp;
-                    </template>
-                    <template v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
-                        <figure v-if="group.newTabContainer === TEMPORARY_CONTAINER" class="image is-16x16 is-inline-block">
-                            <img :src="allContainers[TEMPORARY_CONTAINER].iconUrl" class="size-16 fill-context" />
+
+                        <figure v-if="group.isArchive" class="image is-16x16">
+                            <img src="/icons/archive.svg" />
                         </figure>
-                        <figure v-else-if="data.containers && data.containers[group.newTabContainer] && data.containers[group.newTabContainer].iconUrl" class="image is-16x16 is-inline-block">
-                            <img
-                                :src="data.containers[group.newTabContainer].iconUrl"
-                                :style="{fill: data.containers[group.newTabContainer].colorCode}"
-                                class="size-16 fill-context"
-                                />
-                        </figure>
-                        &nbsp;
-                    </template>
-                    <span class="group-title" v-text="group.title"></span>
-                    &nbsp;
-                    <small class="is-italic">
-                        (<span v-text="lang('groupTabsCount', group.tabs.length)"></span>)
-                    </small>
-                </label>
+
+                        <template v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID">
+                            <figure v-if="group.newTabContainer === TEMPORARY_CONTAINER" class="image is-16x16 is-inline-block">
+                                <img :src="allContainers[TEMPORARY_CONTAINER].iconUrl" class="size-16 fill-context" />
+                            </figure>
+                            <figure v-else-if="data.containers && data.containers[group.newTabContainer] && data.containers[group.newTabContainer].iconUrl" class="image is-16x16 is-inline-block">
+                                <span :class="`size-16 userContext-icon identity-icon-${data.containers[group.newTabContainer].icon} identity-color-${data.containers[group.newTabContainer].color}`"></span>
+                            </figure>
+                        </template>
+
+                        <span class="group-title" v-text="getGroupTitle(group)"></span>
+
+                        <small class="is-italic">
+                            (<span v-text="lang('groupTabsCount', group.tabs.length)"></span>)
+                        </small>
+                    </label>
+                </div>
             </div>
         </div>
 
@@ -199,10 +243,6 @@
 
 <style lang="scss">
     #manageAddonBackup {
-        .image.is-16x16 {
-            min-width: 16px;
-        }
-
         .group-title {
             word-wrap: anywhere;
         }

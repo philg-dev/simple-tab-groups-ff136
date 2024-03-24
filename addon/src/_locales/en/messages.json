@@ -282,8 +282,8 @@
         "description": "Hotkeys"
     },
     "hotkeysDescription": {
-        "message": "Here you can add hotkeys.<br>Restrictions:<br>1. These hotkeys will only work on web pages (http:, https:), not on the browser pages (about:), because the WebExtensions API does not allow this.<br>2. Some hotkeys will not work with all keyboard layouts. For example, a <code>Ctrl + ~</code> shortcut created with an English layout will not work with a keyboard with Russian layout, because in the Russian layout this key has another code. To fix this, just create another hotkey with the Russian layout: <code>Ctrl + Ё</code>",
-        "description": "Hotkeys description"
+        "message": "You can also configure hotkeys on the <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Manage extension shortcuts in Firefox</a> page. They will work on all windows and browser pages.",
+        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "addHotKeyButton": {
         "message": "Add hotkey",
@@ -294,8 +294,8 @@
         "description": "Delete hotkey"
     },
     "hotkeyPlaceholder": {
-        "message": "Press key here",
-        "description": "Press key here"
+        "message": "Type a shortcut",
+        "description": "Type a shortcut"
     },
     "selectAction": {
         "message": "Select action",
@@ -304,6 +304,10 @@
     "selectGroup": {
         "message": "Select group",
         "description": "Select group"
+    },
+    "unknownGroup": {
+        "message": "Unknown group",
+        "description": "Unknown group"
     },
     "hotkeyActionTitleLoadNextGroup": {
         "message": "Load next group",
@@ -418,10 +422,10 @@
         "description": "Icon style"
     },
     "discardTabsAfterHide": {
-        "message": "Discard tabs after hide (this will save the RAM)",
-        "description": "Discard tabs after hide (this will save the RAM)"
+        "message": "Unload tabs from memory after closing a group",
+        "description": "Unload tabs from memory after closing a group"
     },
-    "discardAfterHideExcludeAudioTabs": {
+    "discardExcludeAudioTabs": {
         "message": "Exclude tabs with sound",
         "description": "Exclude tabs with sound"
     },
@@ -460,10 +464,6 @@
     "ffFailedAndLostDataMessage": {
         "message": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it",
         "description": "FF failed and all the groups were lost.\nIf you have a backup, you can restore data from it"
-    },
-    "enterDefaultGroupIconViewTypeTitle": {
-        "message": "Icon style for a new group",
-        "description": "Icon style for a new group"
     },
     "openGroupInNewWindow": {
         "message": "Open group in new window",
@@ -619,7 +619,7 @@
         "message": "Create a new group when opening a new window",
         "description": "Create a new group when opening a new window"
     },
-    "prependGroupTitleToWindowTitle": {
+    "prependTitleToWindow": {
         "message": "Prepend group title to window title",
         "description": "Prepend group title to window title"
     },
@@ -665,10 +665,6 @@
         "message": "You do not have access to bookmarks. Enable it on in addon settings",
         "description": "You do not have access to bookmarks. Enable it on in addon settings"
     },
-    "exportGroupToMainBookmarkFolder": {
-        "message": "Export groups to \"STG bookmarks\" bookmark folder",
-        "description": "Export groups to \"STG bookmarks\" bookmark folder"
-    },
     "exportGroupToBookmarks": {
         "message": "Export group to bookmarks",
         "description": "Export group to bookmarks"
@@ -691,10 +687,6 @@
         "message": "This group has no tabs",
         "description": "This group has no tabs"
     },
-    "autoBackupGroupsToBookmarks": {
-        "message": "Auto backup all groups to bookmarks",
-        "description": "Auto backup all groups to bookmarks"
-    },
     "exportAllGroupsToBookmarks": {
         "message": "Export all groups to bookmarks",
         "description": "Export all groups to bookmarks"
@@ -706,10 +698,6 @@
     "discardTabTitle": {
         "message": "Discard tab",
         "description": "Discard tab"
-    },
-    "autoBackupGroupsToFile": {
-        "message": "Auto backup all groups to file (into downloads folder)",
-        "description": "Auto backup all groups to file (into downloads folder)"
     },
     "folderNameTitle": {
         "message": "Folder name",
@@ -726,10 +714,6 @@
     "showOtherTabs": {
         "message": "Show other tabs",
         "description": "Show other tabs"
-    },
-    "dontDiscardTabsAfterHideThisGroup": {
-        "message": "Don't discard tabs into this group after hide",
-        "description": "Don't discard tabs into this group after hide"
     },
     "showNotificationAfterGroupDelete": {
         "message": "Show notification after group delete",
@@ -841,9 +825,13 @@
         "message": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working.",
         "description": "Please enable \"Open previous windows and tabs\" in browser settings.<br>This is necessary to maintain communication between the group and the tab, <br>otherwise the tabs will not open when the browser starts and will be lost from the addon -<br>the addon will stop working."
     },
+    "exportToBookmarksWhenAutoBackup": {
+        "message": "Save the group to bookmarks when auto backup",
+        "description": "Save the group to bookmarks when auto backup"
+    },
     "leaveBookmarksOfClosedTabs": {
-        "message": "Leave bookmarks of closed tabs (bookmarks will separate the separator)",
-        "description": "Leave bookmarks of closed tabs (bookmarks will separate the separator)"
+        "message": "Leave bookmarks of closed tabs",
+        "description": "Leave bookmarks of closed tabs"
     },
     "enableDebugTitle": {
         "message": "Enable DEBUG",
@@ -1011,28 +999,6 @@
         "message": "Search or right arrow to focus on active tab/group",
         "description": "Search or right arrow to focus on active tab/group"
     },
-    "thisGroupIsMain": {
-        "message": "This group is marked as main",
-        "description": "This group is marked as main"
-    },
-    "setGroupAsMain": {
-        "message": "Set this group as main",
-        "description": "Set this group as main"
-    },
-    "thisGroupWasMain": {
-        "message": "Notice\nThis group was marked as the main",
-        "description": "Notice\nThis group was marked as the main"
-    },
-    "moveToMainIfNotInCatchTabRules": {
-        "message": "Move tabs from this group to the \"$grouptitle$\" group if none of the regular expression rules matches",
-        "description": "Move tabs from this group to the 'My main group' group if none of the regular expression rules matches",
-        "placeholders": {
-            "grouptitle": {
-                "content": "$1",
-                "example": "My main group"
-            }
-        }
-    },
     "noContainerTitle": {
         "message": "Default",
         "description": "No container"
@@ -1072,10 +1038,6 @@
                 "example": "Facebook Container"
             }
         }
-    },
-    "hotkeysDescription2": {
-        "message": "You can also configure hotkeys on the <a href=\"https://support.mozilla.org/kb/manage-extension-shortcuts-firefox\" target=\"_blank\">Manage extension shortcuts in Firefox</a> page. They will work on all windows and browser pages.",
-        "description": "You can also configure hotkeys on the Manage extension shortcuts in Firefox page. They will work on all windows and browser pages."
     },
     "muteTab": {
         "message": "Mute tab",
@@ -1177,6 +1139,22 @@
         "message": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page \"about:addons\" or by pressing the key combination <code>Ctrl+Shift+A</code>",
         "description": "To avoid losing tabs or their location in windows and groups, it is strongly recommended to turn off or remove enabled extensions that conflict with the Simple Tab Groups addon. You can do this on the addons settings page about:addons or by pressing the key combination Ctrl+Shift+A"
     },
+    "ignoreConflictedExtIgnore": {
+        "message": "Ignore this extension",
+        "description": "Ignore conflicted extension"
+    },
+    "ignoreConflictedExtDontIgnore": {
+        "message": "Don't ignore this extension",
+        "description": "Don't ignore this extension"
+    },
+    "ignoreConflictedExtIgnoredText": {
+        "message": "ignored",
+        "description": "Extension is ignored"
+    },
+    "ignoreConflictedExtConfirm": {
+        "message": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?",
+        "description": "This addon will interfere with the STG, which may cause you to lose tabs.\nStill ignore it?"
+    },
     "theme": {
         "message": "Theme",
         "description": "Select theme"
@@ -1220,5 +1198,31 @@
     "helpPageStgDebugAutoDebugMainTitle": {
         "message": "An error occurred in the addon",
         "description": "An error occurred in the addon"
+    },
+    "windowNotHaveGroup": {
+        "message": "This window does not have a loaded group",
+        "description": "This window does not have a loaded group"
+    },
+    "defaultGroup": {
+        "message": "Default group",
+        "description": "Default group"
+    },
+    "moveToGroupIfNoneCatchTabRules": {
+        "message": "If none of the regular expressions match the tab, move it to the group:",
+        "description": "If none of the regular expressions match the tab, move it to the group:"
+    },
+    "dontMove": {
+        "message": "Don't move",
+        "description": "Don't move"
+    },
+    "groupArchivedTitle": {
+        "message": "$groupName$ (archived)",
+        "description": "My group (archived)",
+        "placeholders": {
+            "groupName": {
+                "content": "$1",
+                "example": "My group"
+            }
+        }
     }
 }

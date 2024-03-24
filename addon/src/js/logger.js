@@ -1,7 +1,9 @@
 
 import * as Constants from './constants.js';
 import JSON from './json.js';
+import * as Utils from './utils.js';
 import Messages from './messages.js';
+import {normalizeError, getStack} from './logger-utils.js';
 
 const consoleKeys = ['log', 'info', 'warn', 'error', 'debug', 'assert'];
 
@@ -12,13 +14,14 @@ const connectToBG = function(log) {
     messagePort: null,
 })
 
-Logger.logs = [];
+const logs = [];
 
 export default function Logger(prefix, prefixes = []) {
     if (this) { // create new logger with prefix
         this.scope = null;
         this.stopMessage = null;
         this.prefixes ??= prefixes;
+        this.enabled = true;
 
         if (prefix) {
             this.prefixes.push(prefix);
@@ -30,12 +33,16 @@ export default function Logger(prefix, prefixes = []) {
 
         return this;
     } else {
-        Logger.prototype.addLog.apply(new Logger, Array.from(arguments));
+        Log.apply(new Logger, Array.from(arguments));
     }
 }
 
 function setLoggerFuncs() {
-    consoleKeys.forEach(cKey => this[cKey] = Logger.prototype.addLog.bind(this, cKey));
+    if (consoleKeys.every(cKey => typeof this[cKey] === 'function')) {
+        return;
+    }
+
+    consoleKeys.forEach(cKey => this[cKey] = Log.bind(this, cKey));
 
     this.start = function(...startArgs) {
         let cKey = 'log';
@@ -45,9 +52,10 @@ function setLoggerFuncs() {
             startArgs = [...startArgs[0], ...startArgs.slice(1)];
         }
 
-        const uniq = getRandomInt(),
+        const uniq = Utils.getRandomInt(),
             logger = new Logger(startArgs.shift(), this.prefixes.slice());
 
+        logger.enabled = this.enabled;
         logger.scope = uniq;
         logger.stopMessage = `STOP ${logger.scope}`;
 
@@ -55,6 +63,11 @@ function setLoggerFuncs() {
 
         logger.stop = (...args) => {
             logger.log.call(logger, logger.stopMessage, ...args);
+            return args[0];
+        };
+
+        logger.stopWarn = (...args) => {
+            logger.warn.call(logger, logger.stopMessage, ...args);
             return args[0];
         };
 
@@ -69,6 +82,20 @@ function setLoggerFuncs() {
     this.create = this.start; // alias
 
     this.onCatch = function(message, throwError = true) {
+        if (Array.isArray(message)) {
+            message = message.map(value => {
+                if (Array.isArray(value)) {
+                    return value.slice();
+                } else if (value === Object(value)) {
+                    return cloneObjectOnlyPrimitiveValues(value);
+                }
+
+                return value;
+            });
+        } else if (message === Object(message)) {
+            message = cloneObjectOnlyPrimitiveValues(message);
+        }
+
         return (error) => {
             if (typeof message === 'string') {
                 message = `Catch error on: ${message}`;
@@ -78,11 +105,13 @@ function setLoggerFuncs() {
 
             error ??= typeof message === 'object' ? new Error(JSON.stringify(message)) : new Error(message);
 
-            let args = [...[message].flat(), normalizeError(error)];
+            const args = [...[message].flat(), normalizeError(error)];
 
             if (window.localStorage.enableDebug && !this.fromErrorEventHandler) {
                 throwError = true;
             }
+
+            this.enable();
 
             delete this.fromErrorEventHandler;
 
@@ -105,19 +134,45 @@ function setLoggerFuncs() {
     }.bind(this);
 
     this.throwError = function(message, error) {
-        return this.onError(message, true)(error);
+        this.onError(message, true)(error);
+        return this;
     }.bind(this);
 
     this.runError = function(message, error) {
-        return this.onError(message, false)(error);
+        this.onError(message, false)(error);
+        return this;
     }.bind(this);
 
-    return this;
+    this.isEnabled = function(cKey) {
+        return this.enabled || !!localStorage.enableDebug || cKey === 'error' || cKey === 'assert';
+    }.bind(this);
+
+    this.enable = function() {
+        this.enabled = true;
+        return this;
+    }.bind(this);
+
+    this.disable = function() {
+        this.enabled = false;
+        return this;
+    }.bind(this);
 }
 
-Logger.prototype.addLog = function(cKey, ...args) {
-    if (!Array.isArray(this.prefixes)) {
-        return console.error('invalid logger scope');
+function cloneObjectOnlyPrimitiveValues(obj) {
+    const result = {};
+    for (const key in obj) {
+        if (typeof obj[key] !== 'object') {
+            result[key] = obj[key];
+        }
+    }
+    return result;
+}
+
+function Log(cKey, ...args) {
+    setLoggerFuncs.call(this);
+
+    if (!this.isEnabled(cKey)) {
+        return;
     }
 
     if (cKey === 'assert' && args[0]) {
@@ -138,12 +193,11 @@ Logger.prototype.addLog = function(cKey, ...args) {
     };
 
     if (cKey === 'error') {
-        Errors.set(log);
+        Errors.add(log);
     }
 
     if (Constants.IS_BACKGROUND_PAGE) {
-        Logger.logs.push(log);
-        Logger.prototype.showLog.call(this, log, {cKey, args});
+        addLog(log);
     } else {
         connectToBG(this).sendMessage('save-log', {
             log,
@@ -154,9 +208,21 @@ Logger.prototype.addLog = function(cKey, ...args) {
             },
         });
     }
+
+    showLog.call(this, log, {cKey, args});
 }
 
-Logger.prototype.showLog = function(log, {cKey, args}) {
+export function addLog(log) {
+    logs.push(log);
+}
+
+export function showLog(log, {cKey, args}) {
+    setLoggerFuncs.call(this);
+
+    if (!this.isEnabled(cKey)) {
+        return;
+    }
+
     if (self.localStorage.enableDebug || self.IS_TEMPORARY) {
         let argsToConsole = cKey === 'assert'
             ? [args[0], this.prefixes.join('.'), ...args.slice(1)]
@@ -215,7 +281,7 @@ function calcIndent(args) {
     }
 
     return indentCount;
-};
+}
 
 function getIndentAndRemoveScope(indentCount, args) {
     let {action, argIndex} = getAction.call(this, args);
@@ -229,67 +295,54 @@ function getIndentAndRemoveScope(indentCount, args) {
     }
 
     return this.indentSymbol.repeat(indentCount);
-};
+}
 
 const Errors = {
-    get(clearAfter) {
-        let errorLogs = JSON.parse(self.localStorage.errorLogs || null) || [];
-
-        if (clearAfter) {
-            delete self.localStorage.errorLogs;
-        }
-
-        return errorLogs;
+    get() {
+        return JSON.parse(self.localStorage.errorLogs || null) || [];
     },
-    set(error) {
-        let errorLogs = this.get();
+    add(error) {
+        const errorLogs = Errors.get();
 
         errorLogs.push(error);
 
-        self.localStorage.errorLogs = JSON.stringify(errorLogs.slice(-50));
+        try {
+            self.localStorage.errorLogs = JSON.stringify(errorLogs.slice(-50));
+        } catch (e) {}
+    },
+    clear() {
+        delete self.localStorage.errorLogs;
     },
 };
 
-Logger.getErrors = Errors.get.bind(Errors);
-
-Logger.clearLogs = () => {
-    Logger.logs = Logger.logs.slice(-150);
-    Logger.getErrors(true);
-};
-
-Logger.normalizeError = normalizeError;
-function normalizeError(event) {
-    let nativeError = event.error || event;
-
-    if (
-        !nativeError ||
-        typeof nativeError === 'string' ||
-        !String(nativeError?.name).toLowerCase().includes('error') ||
-        nativeError.fileName === 'undefined' ||
-        !nativeError.stack?.length
-    ) {
-        let {stack = ''} = nativeError;
-        nativeError = new Error(JSON.stringify(nativeErrorToObj(nativeError)));
-        if (!stack.length) {
-            nativeError.stack = stack + `\nFORCE STACK\n` + nativeError.stack;
-        }
-    }
-
-    return {
-        time: (new Date).toISOString(),
-        ...nativeErrorToObj(nativeError),
-        stack: getStack(nativeError),
-    };
+export function getErrors() {
+    return Errors.get();
 }
 
-function nativeErrorToObj(nativeError) {
-    return {
-        message: nativeError.message,
-        fileName: nativeError.fileName?.replace(Constants.STG_BASE_URL, ''),
-        lineNumber: nativeError.lineNumber,
-        columnNumber: nativeError.columnNumber,
-        stack: getStack(nativeError).join('\n'),
-        arguments: nativeError.arguments,
+export function clearErrors() {
+    Errors.clear();
+}
+
+export function getLogs() {
+    return logs.slice(-3000);
+}
+
+export function clearLogs() {
+    logs.length = 0;
+}
+
+export function catchFunc(asyncFunc) {
+    const fromStack = new Error().stack;
+
+    return async function() {
+        try {
+            return await asyncFunc(...Array.from(arguments));
+        } catch (e) {
+            e.message = `[catchFunc]: ${e.message}`;
+            e.stack = [fromStack, 'Native error stack:', e.stack].join('\n');
+            e.arguments = JSON.clone(Array.from(arguments));
+            self.errorEventHandler(e);
+        }
     };
 }
 
@@ -317,46 +370,6 @@ function showErrorNotificationMessage(logger) {
     } else {
         connectToBG(logger).sendMessage('show-error-notification');
     }
-}
-
-const DELETE_LOG_STARTS_WITH = [
-    'Logger',
-    'normalizeError',
-    'setLoggerFuncs',
-    'sendMessage',
-    'sendExternalMessage',
-    './js/logger.js',
-];
-
-const UNNECESSARY_LOG_STRINGS = [
-    Constants.STG_BASE_URL,
-    'async*',
-    '../node_modules/vue-loader/lib/index.js??vue-loader-options!./popup/Popup.vue?vue&type=script&lang=js&',
-    '../node_modules/vue-loader/lib/index.js??vue-loader-options!./manage/Manage.vue?vue&type=script&lang=js&',
-    '../node_modules/vue-loader/lib/index.js??vue-loader-options!./options/Options.vue?vue&type=script&lang=js&',
-];
-
-function getStack(e, start = 0, to = 50) {
-    return UNNECESSARY_LOG_STRINGS
-        .reduce((str, strToDel) => String(str).replaceAll(strToDel, ''), e.stack)
-        .trim()
-        .split('\n')
-        .filter(Boolean)
-        .filter(str => !DELETE_LOG_STARTS_WITH.some(unlogStr => str.startsWith(unlogStr)))
-        .slice(start, to);
-}
-
-function getRandomInt(min = 1, max = Number.MAX_SAFE_INTEGER) {
-    const randomBuffer = new Uint32Array(1);
-
-    self.crypto.getRandomValues(randomBuffer);
-
-    let randomNumber = randomBuffer[0] / (0xffffffff + 1);
-
-    min = Math.ceil(min);
-    max = Math.floor(max);
-
-    return Math.floor(randomNumber * (max - min + 1)) + min;
 }
 
 self.errorEventHandler = errorEventHandler; // add to self if need remove Listener

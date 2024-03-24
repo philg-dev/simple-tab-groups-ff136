@@ -3,26 +3,29 @@
 
     import Vue from 'vue';
 
-    import popup from '../js/popup.vue';
+    import popup from '../components/popup.vue';
     import editGroupPopup from './edit-group-popup.vue';
-    import editGroup from '../js/edit-group.vue';
+    import editGroup from '../components/edit-group.vue';
     import contextMenu from '../components/context-menu.vue';
     import contextMenuTab from '../components/context-menu-tab.vue';
     import contextMenuTabNew from '../components/context-menu-tab-new.vue';
     import contextMenuGroup from '../components/context-menu-group.vue';
 
-    import backgroundSelf from 'background';
-    import * as Constants from 'constants';
-    import Messages from 'messages';
-    import Logger from 'logger';
-    import * as Containers from 'containers';
-    import * as Urls from 'urls';
-    import * as Cache from 'cache';
-    import * as Groups from 'groups';
-    import * as Windows from 'windows';
-    import * as Tabs from 'tabs';
-    import * as Utils from 'utils';
-    import JSON from 'json';
+    import backgroundSelf from '/js/background.js';
+    import * as Constants from '/js/constants.js';
+    import Messages from '/js/messages.js';
+    import Logger, {catchFunc} from '/js/logger.js';
+    import * as Containers from '/js/containers.js';
+    import * as Urls from '/js/urls.js';
+    import * as Cache from '/js/cache.js';
+    import * as Groups from '/js/groups.js';
+    import * as Windows from '/js/windows.js';
+    import * as Tabs from '/js/tabs.js';
+    import * as Utils from '/js/utils.js';
+    import JSON from '/js/json.js';
+
+    import defaultGroupMixin from '/js/mixins/default-group.mixin.js';
+    import startUpData from '/js/mixins/start-up-data.mixin.js';
 
     const isSidebar = '#sidebar' === window.location.hash;
 
@@ -40,6 +43,27 @@
         }
     }
 
+    function showDebugMode() {
+        if (localStorage.enableDebug) {
+            const div = document.createElement('div');
+            div.innerText = browser.i18n.getMessage('loggingIsEnabledTitle');
+            Object.assign(div.style, {
+                position: 'fixed',
+                backgroundColor: 'coral',
+                padding: '0 4px',
+                borderRadius: '3px',
+                top: 0,
+                left: '50%',
+                transform: 'translate(-50%)',
+                cursor: 'pointer',
+            });
+            div.addEventListener('click', () => Messages.sendMessage('open-options-page', 'general'));
+            document.body.appendChild(div);
+        }
+    }
+
+    showDebugMode();
+
     const SECTION_SEARCH = 'search',
         SECTION_GROUPS_LIST = 'groupsList',
         SECTION_GROUP_TABS = 'groupTabs',
@@ -47,6 +71,8 @@
         availableTabKeys = new Set(['id', 'url', 'title', 'favIconUrl', 'status', 'index', 'discarded', 'active', 'cookieStoreId', 'lastAccessed', 'audible', 'mutedInfo', 'windowId']);
 
     export default {
+        name: 'popup-page',
+        mixins: [defaultGroupMixin, startUpData],
         data() {
             return {
                 isSidebar: isSidebar,
@@ -113,7 +139,7 @@
         created() {
             this.loadOptions();
 
-            if (!isSidebar && backgroundSelf.options.fullPopupWidth) {
+            if (!isSidebar && this.options.fullPopupWidth) {
                 document.documentElement.classList.add('full-popup-width');
             }
 
@@ -121,7 +147,7 @@
         },
         async mounted() {
             const log = logger.start('mounted');
-            const startUpData = await backgroundSelf.startUpData();
+            const startUpData = await this.startUpData();
 
             this.loadWindows(startUpData);
             this.loadGroups(startUpData);
@@ -263,9 +289,10 @@
                         Groups.move(from.data.item.id, this.groups.indexOf(to.data.item));
                     })
                     .$on('drag-move-tab', function(from, to) {
-                        let tabIds = this.getTabIdsForMove(from.data.item.id);
+                        const tabIds = this.getTabIdsForMove(from.data.item.id),
+                            newTabIndex = to.data.item.index;
 
-                        Messages.sendMessageModule('Tabs.move', tabIds, to.data.group.id, {newTabIndex: to.data.item.index});
+                        Messages.sendMessageModule('Tabs.move', tabIds, to.data.group.id, {newTabIndex});
                     })
                     .$on('drag-moving', (item, isMoving) => item.isMoving = isMoving)
                     .$on('drag-over', (item, isOver) => item.isOver = isOver);
@@ -532,7 +559,7 @@
                     },
                 };
 
-                const onMessage = Utils.catchFunc(async request => {
+                const onMessage = catchFunc(async request => {
                     logger.info('take message', request.action);
                     await listeners[request.action](request);
                 });
@@ -644,6 +671,10 @@
 
                 tab = this.mapTabContainer(tab);
 
+                if (tab.url === window.location.href) {
+                    tab.status = browser.tabs.TabStatus.COMPLETE;
+                }
+
                 tab.isMoving = false;
                 tab.isOver = false;
 
@@ -751,7 +782,7 @@
                 title = await this.showPrompt(this.lang('hotkeyActionTitleRenameGroup'), title);
 
                 if (title) {
-                    Groups.update(id, {title});
+                    Messages.sendMessageModule('Groups.update', id, {title});
                 }
             },
 
@@ -1036,14 +1067,14 @@
                     this.multipleTabIds.push(tabId);
                 }
 
-                let tabs = this.multipleTabIds;
+                const tabs = this.multipleTabIds;
 
                 this.multipleTabIds = [];
 
-                return tabs;
+                return [...tabs];
             },
             async moveTabs(tabId, groupId, loadUnsync = false, showTabAfterMovingItIntoThisGroup, discardTabs) {
-                let tabIds = this.getTabIdsForMove(tabId),
+                const tabIds = this.getTabIdsForMove(tabId),
                     group = this.groups.find(gr => gr.id === groupId);
 
                 await Messages.sendMessageModule('Tabs.move', tabIds, groupId, {
@@ -1102,6 +1133,14 @@
                 Messages.sendMessage('export-group-to-bookmarks', {
                     groupId: group.id,
                 });
+            },
+
+            saveEditedGroup(groupId, changes) {
+                this.groupToEdit = null;
+
+                if (Object.keys(changes).length) {
+                    Messages.sendMessageModule('Groups.update', groupId, changes);
+                }
             },
 
             // allowTypes: Array ['groups', 'tabs']
@@ -1243,7 +1282,7 @@
 <template>
     <div
         id="stg-popup"
-        :class="['no-outline', {'edit-group-popup': !!groupToEdit, 'is-sidebar': isSidebar}]"
+        :class="['no-outline', {'edit-group-popup': !!groupToEdit || openEditDefaultGroup, 'is-sidebar': isSidebar}]"
         @contextmenu="mainContextMenu"
         @click="multipleTabIds = []"
         @wheel.ctrl.prevent
@@ -1311,10 +1350,10 @@
                                     </figure>
                                 </div>
                                 <div class="item-title clip-text">
-                                    <span v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID" :class="`size-16 userContext-icon identity-icon-${containers[group.newTabContainer]?.icon} identity-color-${containers[group.newTabContainer]?.color}`"></span>
                                     <figure v-if="group.isArchive" class="image is-16x16">
                                         <img src="/icons/archive.svg" />
                                     </figure>
+                                    <span v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID" :class="`size-16 userContext-icon identity-icon-${containers[group.newTabContainer]?.icon} identity-color-${containers[group.newTabContainer]?.color}`"></span>
                                     <figure
                                         v-if="showMuteIconGroup(group)"
                                         class="image is-16x16"
@@ -1435,10 +1474,10 @@
                                 </figure>
                             </div>
                             <div class="item-title clip-text">
-                                <span v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID" :title="containers[group.newTabContainer]?.name" :class="`size-16 userContext-icon identity-icon-${containers[group.newTabContainer]?.icon} identity-color-${containers[group.newTabContainer]?.color}`"></span>
                                 <figure v-if="group.isArchive" class="image is-16x16">
                                     <img src="/icons/archive.svg" />
                                 </figure>
+                                <span v-if="group.newTabContainer !== DEFAULT_COOKIE_STORE_ID" :title="containers[group.newTabContainer]?.name" :class="`size-16 userContext-icon identity-icon-${containers[group.newTabContainer]?.icon} identity-color-${containers[group.newTabContainer]?.color}`"></span>
                                 <figure
                                     v-if="showMuteIconGroup(group)"
                                     class="image is-16x16"
@@ -1466,7 +1505,10 @@
                 <hr>
 
                 <div class="create-new-group">
-                    <div class="item" tabindex="0" @click="createNewGroup()" @keydown.enter="createNewGroup()">
+                    <div class="item" tabindex="0"
+                        @click="createNewGroup()"
+                        @keydown.enter="createNewGroup()"
+                        @contextmenu="$refs.newGroupContextMenu.open($event)">
                         <div class="item-icon">
                             <img class="size-16" src="/icons/group-new.svg" />
                         </div>
@@ -1556,8 +1598,10 @@
                         <img :src="groupToShow.iconUrlToDisplay" class="is-inline-block size-16" />
                     </div>
                     <div class="item-title clip-text">
+                        <figure v-if="groupToShow.isArchive" class="image is-16x16">
+                            <img src="/icons/archive.svg" />
+                        </figure>
                         <span v-if="groupToShow.newTabContainer !== DEFAULT_COOKIE_STORE_ID" :title="containers[groupToShow.newTabContainer]?.name" :class="`size-16 userContext-icon identity-icon-${containers[groupToShow.newTabContainer]?.icon} identity-color-${containers[groupToShow.newTabContainer]?.color}`"></span>
-                        <img v-if="groupToShow.isArchive" src="/icons/archive.svg" class="size-16" />
                         <span class="group-title" v-text="getGroupTitle(groupToShow)"></span>
                     </div>
                     <div class="item-action is-unselectable">
@@ -1686,6 +1730,15 @@
             </ul>
         </context-menu>
 
+        <context-menu ref="newGroupContextMenu">
+            <ul class="is-unselectable">
+                <li @click="openDefaultGroup">
+                    <img src="/icons/icon.svg" class="size-16" />
+                    <span v-text="lang('defaultGroup')"></span>
+                </li>
+            </ul>
+        </context-menu>
+
         <context-menu-tab-new ref="contextMenuTabNew" @add="addTab"></context-menu-tab-new>
 
         <context-menu-group ref="contextMenuGroup"
@@ -1732,14 +1785,41 @@
                 }]
             "
             @close-popup="groupToEdit = null"
-            @save-group="() => $refs.editGroup.saveGroup()"
+            @save-group="() => $refs.editGroup.triggerChanges()"
             >
             <edit-group
                 ref="editGroup"
-                :groupId="groupToEdit.id"
+                :group-to-edit="groupToEdit.$data"
+                :group-to-compare="groupToEdit.$data"
                 :can-load-file="isSidebar"
-                @saved="groupToEdit = null"
-                @open-manage-groups="openManageGroups"/>
+                @changes="changes => saveEditedGroup(groupToEdit.id, changes)"
+                @open-manage-groups="openManageGroups"></edit-group>
+        </edit-group-popup>
+
+        <edit-group-popup
+            v-if="openEditDefaultGroup"
+            title="defaultGroup"
+            :buttons="
+                [{
+                    event: 'save-group',
+                    classList: 'is-success',
+                    lang: 'save',
+                }, {
+                    event: 'close-popup',
+                    lang: 'cancel',
+                }]
+            "
+            @close-popup="openEditDefaultGroup = false"
+            @save-group="() => $refs.editDefaultGroup.triggerChanges()"
+            >
+            <edit-group
+                ref="editDefaultGroup"
+                :group-to-edit="defaultGroup"
+                :is-default-group="true"
+                :group-to-compare="defaultCleanGroup"
+                :can-load-file="isSidebar"
+                @changes="saveDefaultGroup"
+                @open-manage-groups="openManageGroups"></edit-group>
         </edit-group-popup>
 
         <popup
@@ -1823,6 +1903,7 @@
     }
 
     html {
+        scrollbar-width: thin;
         width: var(--popup-width);
         min-height: var(--min-popup-height);
         max-width: var(--max-popup-width);
@@ -2018,11 +2099,12 @@
             }
 
             .flex-on-hover {
-                display: none;
+                display: flex;
+                visibility: hidden;
             }
 
             &:hover .flex-on-hover {
-                display: flex;
+                visibility: visible;
             }
         }
 
