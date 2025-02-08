@@ -1,0 +1,24 @@
+name: Build Addon
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Node.js environment
+        uses: actions/setup-node@v4.2.0
+        with:
+          node-version: 'lts/Jod'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: addon
+
+      - name: Build ZIP
+        run: npm run build-zip
+        working-directory: addon
