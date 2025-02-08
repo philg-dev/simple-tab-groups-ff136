@@ -1,3 +1,19 @@
+# IMPORTANT!
+
+This Fork of [Drive4ik/simple-tab-groups](https://github.com/Drive4ik/simple-tab-groups)
+was temporarily made to provide people with a fix for regression issues introduced by
+changes that will be part of Firefox v136. The owner of the original repository recently hasn't been
+active. So we're running out of time before v136 makes it to the Firefox stable release,
+and therefore an intermediate solution is needed by many people who rely on STG.
+
+Hopefully Drive4ik will be active again soon... Then I'll retire this fork.
+
+For more information see:
+- [Drive4ik/simple-tab-groups #1242](https://github.com/Drive4ik/simple-tab-groups/issues/1242)
+  - [Rob--W's comment about the regression](https://github.com/Drive4ik/simple-tab-groups/issues/1242#issuecomment-2621175808)
+- [related pull request with the fix / workaround #1250](https://github.com/Drive4ik/simple-tab-groups/pull/1250)
+
+
 <h2><a href="https://addons.mozilla.org/firefox/addon/simple-tab-groups/" target="_blank" rel="noopener noreferrer"><img width="48" src="https://rawgit.com/Drive4ik/simple-tab-groups/master/addon/src/icons/icon.svg" alt="Simple Tab Groups"></a> Simple Tab Groups</h2>
 
 [![Mozilla Add-on](https://img.shields.io/amo/v/simple-tab-groups.svg)](https://addons.mozilla.org/firefox/addon/simple-tab-groups/) [![](https://img.shields.io/amo/d/simple-tab-groups.svg)](https://addons.mozilla.org/firefox/addon/simple-tab-groups/statistics/?last=365) [![](https://img.shields.io/amo/users/simple-tab-groups.svg)](https://addons.mozilla.org/firefox/addon/simple-tab-groups/statistics/usage/?last=365) [![](https://img.shields.io/amo/rating/simple-tab-groups.svg)](https://addons.mozilla.org/firefox/addon/simple-tab-groups/reviews/)
