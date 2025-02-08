@@ -22,3 +22,9 @@ jobs:
       - name: Build ZIP
         run: npm run build-zip
         working-directory: addon
+        
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: simple-tab-groups-ff136@philg-dev-prod
+          path: addon/dist-zip/*prod.zip
